@@ -107,7 +107,7 @@ A full participant mapping table, collaboration descriptions, and justifications
 
 ### 📚 Research
 
-The Phase 1 research and bibliography are in <a href="docs/research/pa6_task1_research.pdf">docs/research/</a>. It covers:
+The Phase 1 research and bibliography are in <a href="docs/research/pa6_task_1_research.pdf">docs/research/</a>. It covers:
 
 - Workflow definitions vs. workflow instances
 - Activity representation, routing, and assignment
