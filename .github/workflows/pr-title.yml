@@ -1,0 +1,18 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ ! "$TITLE" =~ ^(feat|fix|docs|refactor|test|chore):\ .+ ]]; then
+            echo "PR title must look like: 'feat: add StageItem composite'"
+            exit 1
+          fi
