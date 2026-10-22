@@ -1,17 +1,22 @@
 # Minimal Doxyfile for TIVIDY (C++11). Run from the repository root:  doxygen Doxyfile
 PROJECT_NAME           = "TIVIDY"
 PROJECT_BRIEF          = "Generic workflow management engine with plug-and-play industry packs"
+PROJECT_NUMBER         = "0.1"
 OUTPUT_DIRECTORY       = docs/doxygen
-INPUT                  = src
+INPUT                  = include src
 FILE_PATTERNS          = *.h *.cpp
 RECURSIVE              = YES
 EXTRACT_ALL            = YES
-EXTRACT_PRIVATE        = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
 MARKDOWN_SUPPORT       = YES
 OPTIMIZE_OUTPUT_FOR_C  = NO
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
-WARN_IF_UNDOCUMENTED   = YES
+GENERATE_TREEVIEW      = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+WARN_IF_UNDOCUMENTED   = NO
 WARN_IF_DOC_ERROR      = YES
 WARN_NO_PARAMDOC       = NO
 QUIET                  = YES

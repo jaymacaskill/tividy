@@ -37,7 +37,7 @@ namespace tividy
 	 *  2. On the first failure: undo every already-executed child in REVERSE order (ignoring undo failures), then return
 	 *     failure("<name> stopped at step k: <child message>; rolled back n step(s)").
 	 *  3. If all succeed return ok("<name>: n step(s) done"). An empty macro succeeds with "0 step(s)".
-	 * ### undo(): undoes children in reverse order. @pre isReversible(). Returns failure naming the first child that failed.
+	 * ### undo(): undoes children in reverse order. Requires isReversible(). Returns failure naming the first child that failed.
 	 * ### isReversible(): true iff every child is reversible.
 	 * ### describe(): "<name> [n step(s)]" then one indented line per child.
 	 */
