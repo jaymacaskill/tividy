@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -79,7 +79,7 @@ namespace tividy
 
 		/**
 		 * @brief Adaptee (simulated OSS provisioning system). provision() and activate() record the call; both throw
-		 * std::runtime_error("OSS unavailable") while failNextCalls(n) is active. isActive(ref) tells whether activate() succeeded for @p ref.
+		 * std::runtime_error("OSS unavailable") while failNextCalls(n) is active. isActive(service_ref) tells whether activate() succeeded for @p service_ref.
 		 */
 		class NetworkVendor
 		{

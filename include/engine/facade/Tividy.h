@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -77,7 +77,7 @@ namespace tividy
 			 * @brief Installs a pack. Steps, in order:
 			 *  1. store the pack (EngineError if its key is already installed);
 			 *  2. for each createParticipants(): directory.add;
-			 *  3. for each createConnectors(): connectors.registerConnector;
+			 *  3. for each createConnectors(): connectors_ref.registerConnector;
 			 *  4. def = createDirector()->build(StandardWorkflowBuilder); library.add(key, def);
 			 *  5. store createProfile() under key().
 			 * Not transactional: if a step throws, earlier steps stay applied (tests use a fresh Tividy per case).
@@ -97,7 +97,7 @@ namespace tividy
 			/**
 			 * @brief Creates and starts an independent instance of @p workflow_name.
 			 * Steps: def = library.get(name); id = "inst-<n>" (n counts from 1); inst = def->createInstance(id, data, services);
-			 * inst->addObserver(NotificationObserver(connectors)); store inst; inst->start(); return id.
+			 * inst->addObserver(NotificationObserver(connectors_ref)); store inst; inst->start(); return id.
 			 * @throws NotFoundError for an unknown workflow.
 			 */
 			Id startWorkflow(const std::string& workflow_name, const WorkflowData& data);

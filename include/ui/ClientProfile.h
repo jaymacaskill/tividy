@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -36,7 +36,7 @@ namespace tividy
 	{
 		ClientProfile();
 
-		/** @return vocabulary[engineTerm] if present, else @p engineTerm itself (every term always has a usable label). */
+		/** @return vocabulary[engine_term] if present, else @p engine_term itself (every term always has a usable label). */
 		std::string term(const std::string& engine_term) const;
 
 		std::string product_name;                          /**< Banner title, e.g. "TIVIDY Connect". Default "TIVIDY". */
