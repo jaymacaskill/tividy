@@ -15,6 +15,7 @@ Last Modified: 22 October 2026
  * @file Tui.h
  * @brief The interactive text user interface. Talks ONLY to the Tividy facade and a Console.
  */
+
 #ifndef TIVIDY_UI_TUI_H
 #define TIVIDY_UI_TUI_H
 
