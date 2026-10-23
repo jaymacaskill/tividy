@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -46,12 +46,15 @@ namespace tividy
 	 * | Available   | cancel / skip            | Cancelled / Skipped                             |
 	 * | Assigned    | start                    | InProgress                                      |
 	 * | Assigned    | escalate / cancel        | Escalated / Cancelled                           |
+	 * | Assigned    | expire                   | Completed (deadline lapsed, outcome from spec.timeoutCode) |
 	 * | InProgress  | complete [!requiresReview]| Completed (only if the work succeeded)         |
 	 * | InProgress  | submit [requiresReview]  | UnderReview                                     |
 	 * | InProgress  | escalate / cancel        | Escalated / Cancelled                           |
+	 * | InProgress  | expire                   | Completed (as above)                            |
 	 * | UnderReview | approve                  | Completed                                       |
 	 * | UnderReview | reject                   | InProgress if rejections < spec.maxRetries, else Cancelled |
 	 * | UnderReview | escalate / cancel        | Escalated / Cancelled                           |
+	 * | UnderReview | expire                   | Completed (as above)                            |
 	 * | Escalated   | assign                   | Escalated (sets the approver; no status change) |
 	 * | Escalated   | approve                  | Completed (override approval)                   |
 	 * | Escalated   | cancel                   | Cancelled (terminate)                           |
@@ -80,6 +83,10 @@ namespace tividy
 			virtual void cancel(TaskItem& item, const std::string& reason) const;
 			virtual void skip(TaskItem& item, const std::string& reason) const;
 
+			/** Default: throws InvalidStateError. Overridden by Assigned, InProgress and UnderReview: recordResult(system, Outcome::rejected(outcome_code, reason)),
+			 *  moveTo(Completed), emit ItemCompleted. */
+			virtual void expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const;
+
 		protected:
 			/// Helpers that reach TaskItem's private data (WorkItemState is its friend; derived states are not).
 			/// @{
@@ -90,7 +97,7 @@ namespace tividy
 			static void emit(TaskItem& item, EventType type, const Id& actor_id, const Outcome& outcome,
 							 const std::string& message, unsigned count = 0);
 
-			/** Sets the item's assignee. */
+			/** Sets the item's assignee and, when the item is entering Assigned, assigned_at = clock.now(). */
 			static void setAssignee(TaskItem& item, const Id& participant_id);
 
 			/** The Template Method driver: validateOutcome -> performWork -> onCompleted. See TaskItem::executeWork().
@@ -145,6 +152,7 @@ namespace tividy
 			void start(TaskItem& item, const Participant& actor) const override;
 			void escalate(TaskItem& item, const std::string& reason) const override;
 			void cancel(TaskItem& item, const std::string& reason) const override;
+			void expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const override;
 	};
 
 	class InProgressState : public WorkItemState
@@ -161,6 +169,7 @@ namespace tividy
 
 			void escalate(TaskItem& item, const std::string& reason) const override;
 			void cancel(TaskItem& item, const std::string& reason) const override;
+			void expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const override;
 	};
 
 	class UnderReviewState : public WorkItemState
@@ -172,6 +181,7 @@ namespace tividy
 			void reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const override;
 			void escalate(TaskItem& item, const std::string& reason) const override;
 			void cancel(TaskItem& item, const std::string& reason) const override;
+			void expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const override;
 	};
 
 	class EscalatedState : public WorkItemState

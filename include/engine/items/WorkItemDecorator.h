@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -49,6 +49,8 @@ namespace tividy
 			const WorkItemSpec& spec() const override;
 			ItemStatus status() const override;
 			const Id& assignee() const override;
+			TimePoint assignedAt() const override;
+			TimePoint dueAt() const override;
 			std::vector<WorkItem*> children() override;
 			WorkItem& add(std::unique_ptr<WorkItem> child) override;
 			WorkItem* find(const Id& id) override;
@@ -63,6 +65,7 @@ namespace tividy
 			void escalate(const std::string& reason) override;
 			void cancel(const std::string& reason) override;
 			void skip(const std::string& reason) override;
+			void expire(const std::string& outcome_code, const std::string& reason) override;
 
 			void accept(WorkItemVisitor& visitor) const override;
 			std::unique_ptr<WorkItemIterator> createIterator() override;

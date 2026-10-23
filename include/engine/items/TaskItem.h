@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -61,6 +61,8 @@ namespace tividy
 			const WorkItemSpec& spec() const override;
 			ItemStatus status() const override;          /**< @return state->status(). */
 			const Id& assignee() const override;
+			TimePoint assignedAt() const override;
+			TimePoint dueAt() const override;            /**< assigned_at + spec_ref.dueAfterSeconds() when both exist, else TimePoint(). */
 			WorkItem* find(const Id& id) override;       /**< @return this if spec().id() == id, else nullptr. */
 
 			void publish() override;                     /**< Each lifecycle method simply calls state->op(*this, ...). */
@@ -73,6 +75,7 @@ namespace tividy
 			void escalate(const std::string& reason) override;
 			void cancel(const std::string& reason) override;
 			void skip(const std::string& reason) override;
+			void expire(const std::string& outcome_code, const std::string& reason) override;
 
 			void accept(WorkItemVisitor& visitor) const override;          /**< visitor.visitTask(*this). */
 			std::unique_ptr<WorkItemIterator> createIterator() override;   /**< DepthFirstIterator over just this item. */
@@ -123,6 +126,7 @@ namespace tividy
 			const WorkItemState* state;
 			WorkContext* context_ref;
 			Id assignee_ref;
+			TimePoint assigned_at;
 			unsigned rejections_ref;
 			unsigned failures_ref;
 			unsigned escalations_ref;

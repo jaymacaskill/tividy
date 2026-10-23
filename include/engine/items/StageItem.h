@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -42,7 +42,7 @@ namespace tividy
 	 * ### Lifecycle operations
 	 *  - cancel(reason): cancels every non-terminal child in order (cascade).
 	 *  - skip(reason):   skips every Created/Available child; throws InvalidStateError if any child has started.
-	 *  - publish, assign, start, submit, complete, approve, reject, escalate:
+	 *  - publish, assign, start, submit, complete, approve, reject, escalate, expire:
 	 *    throw UnsupportedOperationError("a stage is driven by its children").
 	 *  - assignee() is "". createMemento()/restore()/isReversible() use the WorkItem defaults.
 	 */
@@ -70,6 +70,7 @@ namespace tividy
 			void escalate(const std::string& reason) override;
 			void cancel(const std::string& reason) override;
 			void skip(const std::string& reason) override;
+			void expire(const std::string& outcome_code, const std::string& reason) override;
 
 			/** @brief Prototype: new StageItem with the same spec, each child replaced by child->clone(). */
 			std::unique_ptr<WorkItem> clone() const override;

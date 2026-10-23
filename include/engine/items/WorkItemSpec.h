@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -52,6 +52,13 @@ namespace tividy
 			/** true: FlowController starts and completes the item itself once it is assigned. Must not be reviewRequired. Default false. */
 			WorkItemSpec& automatic(bool is_automatic);
 
+			/** Time allowed from assignment until the item must be finished, in seconds. 0 = no deadline (default). */
+			WorkItemSpec& dueAfter(long seconds);
+
+			/** What happens when the deadline passes. Empty (default): the item is escalated. Non-empty: the item is completed by the system
+			 *  with Outcome::rejected(code, "deadline lapsed"), so routing can branch on it (a "default judgment"). @pre dueAfter() > 0. */
+			WorkItemSpec& onTimeout(const std::string& outcome_code);
+
 			/** Retries allowed: technical failures before escalation, AND reviewer rejections before the next reject cancels. Default 2. */
 			WorkItemSpec& maxRetries(unsigned count);
 
@@ -63,6 +70,8 @@ namespace tividy
 			bool requiresReview() const;
 			bool isAutomatic() const;
 			unsigned maxRetries() const;
+			long dueAfterSeconds() const;
+			const std::string& timeoutCode() const;
 
 		private:
 			Id id_ref;
@@ -73,6 +82,8 @@ namespace tividy
 			bool review_required;
 			bool automatic_ref;
 			unsigned max_retries;
+			long due_after_seconds;
+			std::string timeout_code;
 	};
 } // namespace tividy
 

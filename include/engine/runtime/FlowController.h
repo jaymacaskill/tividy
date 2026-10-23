@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -49,6 +49,8 @@ namespace tividy
 	 *  - ItemEscalated (X, level n = event.count()): r = policies.escalation ? policies.escalation->handle({instance id, X.id, message, n, &data})
 	 *      : unresolved. If resolved: id = assignment.chooseParticipant(X, r.approver_role, directory, data); if non-empty X.assign(id)
 	 *      (status stays Escalated). Otherwise publish EngineNote "escalation unresolved for <X.id>"; X stays Escalated.
+	 *  - DeadlineMissed (X): if X.status() is Assigned, InProgress or UnderReview: if X.spec().timeoutCode() is non-empty then
+	 *      X.expire(timeoutCode, "deadline lapsed") (a default judgment that routing can branch on) otherwise X.escalate("deadline missed").
 	 *  - ItemCancelled (X): if the instance is Running: instance.finish(Failed, "item cancelled: <X.id>").
 	 *  - ExternalSignal (message m): if m is in policies.cancel_signals: instance.cancel("signal: " + m).
 	 *  - everything else: nothing.

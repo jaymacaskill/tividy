@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -60,6 +60,12 @@ namespace tividy
 
 			/** @return participant id responsible, or "" if none. */
 			virtual const Id& assignee() const = 0;
+
+			/** @return when the item last entered Assigned, or TimePoint() if it never has. Default: TimePoint(). */
+			virtual TimePoint assignedAt() const;
+
+			/** @return assignedAt() + spec().dueAfterSeconds(), or TimePoint() if there is no deadline or the item was never assigned. Default: TimePoint(). */
+			virtual TimePoint dueAt() const;
 			/// @}
 
 			/// @name Composite structure (transparent form: declared here, supported by StageItem only)
@@ -87,6 +93,10 @@ namespace tividy
 			virtual void escalate(const std::string& reason) = 0;                         /**< Assigned/InProgress/UnderReview -> Escalated. */
 			virtual void cancel(const std::string& reason) = 0;                           /**< Any non-terminal -> Cancelled. */
 			virtual void skip(const std::string& reason) = 0;                             /**< Created/Available -> Skipped. */
+
+			/** Assigned/InProgress/UnderReview -> Completed by the SYSTEM when a deadline lapses. Runs no work and no validation. Records
+			 *  Outcome::rejected(@p outcome_code, @p reason), completedBy "system", and publishes ItemCompleted with that outcome. */
+			virtual void expire(const std::string& outcome_code, const std::string& reason) = 0;
 			/// @}
 
 			/** @brief Prototype: deep copy of the TEMPLATE state. @return a new unbound item: status Created, no assignee, counters zero.

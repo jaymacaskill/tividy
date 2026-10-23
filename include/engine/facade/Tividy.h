@@ -45,6 +45,7 @@ namespace tividy
 		Id item_id;
 		std::string name;
 		ItemStatus status;
+		TimePoint due_at;        /**< The item's deadline; TimePoint() when none. */
 	};
 
 	/** Progress of one instance, computed with a ProgressVisitor. */
@@ -58,6 +59,11 @@ namespace tividy
 	/**
 	 * @brief Facade (GoF "Facade"). Hides packs, definitions, instances, commands and connectors behind a few calls.
 	 *
+	 * ### Time
+	 * Tividy runs on SIMULATED time: its ManualClock only moves when advanceTime() is called, which also sweeps every Running instance for
+	 * lapsed deadlines. This makes deadline-driven behaviour demonstrable in seconds; a production deployment would call advanceTime()
+	 * from a timer.
+	 *
 	 * ### Ownership
 	 * Owns: clock, ParticipantDirectory, ConnectorRegistry, installed packs, WorkflowLibrary, all instances (in creation order),
 	 * CommandFactory and one ClientProfile per pack. Not copyable.
@@ -69,8 +75,8 @@ namespace tividy
 	class Tividy
 	{
 		public:
-			/** @param clock Time source; if null a SystemClock is created. */
-			explicit Tividy(std::unique_ptr<Clock> clock = std::unique_ptr<Clock>());
+			/** @param clock Simulated clock; if null a ManualClock starting at the current real time is created. */
+			explicit Tividy(std::unique_ptr<ManualClock> clock = std::unique_ptr<ManualClock>());
 			~Tividy();
 
 			/**
@@ -141,6 +147,17 @@ namespace tividy
 			/** @brief Publishes an ExternalSignal(message = @p signal_name) on the instance (see DefinitionPolicies::cancel_signals). @throws NotFoundError. */
 			void signal(const Id& instance_id, const std::string& signal_name);
 
+			/**
+			 * @brief Moves simulated time forward by @p seconds, then sweeps every Running instance for lapsed deadlines.
+			 * @param seconds >= 0 (else EngineError).
+			 * @return the total number of DeadlineMissed events published; the FlowController of each instance has already reacted
+			 *         (expired or escalated the items) when this returns.
+			 */
+			std::size_t advanceTime(long seconds);
+
+			/** @return the current simulated time. */
+			TimePoint now() const;
+
 			ParticipantDirectory& participants();
 
 			ConnectorRegistry& connectors();
@@ -148,7 +165,7 @@ namespace tividy
 			Tividy(const Tividy&);              // not defined: non-copyable (C++11 idiom)
 			Tividy& operator=(const Tividy&);   // not defined
 
-			std::unique_ptr<Clock> clock;
+			std::unique_ptr<ManualClock> clock;
 			ParticipantDirectory directory;
 			ConnectorRegistry connectors_ref;
 			Services services;

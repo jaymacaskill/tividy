@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -75,7 +75,8 @@ namespace tividy
 			 *  4. a reviewRequired item has a non-empty reviewerRole;
 			 *  5. an automatic item is not reviewRequired;
 			 *  6. policies.assignment is non-null;
-			 *  7. every routing key and every id mentioned by the policies exists.
+			 *  7. every routing key and every id mentioned by the policies exists;
+			 *  8. an item with a non-empty timeout_code has dueAfterSeconds() > 0, and an automatic item has no deadline.
 			 */
 			std::vector<std::string> validationProblems() const;
 

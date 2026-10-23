@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -57,6 +57,7 @@ namespace tividy
 		InstanceStarted, InstanceCompleted, InstanceFailed, InstanceCancelled,
 		ItemAvailable, ItemAssigned, ItemStarted, ItemSubmitted, ItemCompleted, ItemRejected,
 		ItemEscalated, ItemCancelled, ItemSkipped, ItemFailed, ItemReverted,
+		DeadlineMissed,  /**< An item's due time passed (see DeadlineMonitor). */
 		ExternalSignal,
 		EngineNote   /**< Audit-only remark by the engine (ignored routing id, unresolved escalation). Triggers nothing. */
 	};

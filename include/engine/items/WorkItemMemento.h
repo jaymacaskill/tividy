@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -32,7 +32,7 @@ namespace tividy
 	 *
 	 * The caretaker (InstanceMemento, held by a Command) can store and pass it back but cannot read
 	 * or change its contents: every member is private and only TaskItem (the Originator) is a friend.
-	 * It stores: status, assignee, rejection/failure/escalation counters, the last outcome and who completed the item.
+	 * It stores: status, assignee, assigned_at, rejection/failure/escalation counters, the last outcome and who completed the item.
 	 * It does not store the item's description (spec), which never changes at runtime.
 	 */
 	class WorkItemMemento
@@ -46,6 +46,7 @@ namespace tividy
 
 			ItemStatus status;
 			Id assignee;
+			TimePoint assigned_at;
 			unsigned rejections;
 			unsigned failures;
 			unsigned escalations;

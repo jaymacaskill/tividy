@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 23 October 2026
 */
 
 /**
@@ -33,6 +33,7 @@ Last Modified: 22 October 2026
 #include "engine/events/Observer.h"
 #include "engine/items/WorkContext.h"
 #include "engine/items/WorkItem.h"
+#include "engine/runtime/DeadlineMonitor.h"
 #include "engine/runtime/FlowController.h"
 #include "engine/runtime/Observers.h"
 
@@ -74,9 +75,9 @@ namespace tividy
 	 * @brief Owner of one run's data, item tree, event channel, history and controllers.
 	 *
 	 * ### Ownership (composition; everything dies with the instance)
-	 * data_ref, events_ref (ConcreteSubject), audit_ref + audit_observer, root_ref (the cloned tree), context_ref, flow, actions_ref,
-	 * extra_observers. Members are declared in construction order; DO NOT reorder them (context_ref needs data_ref and events_ref;
-	 * flow and actions_ref need *this).
+	 * data_ref, events_ref (ConcreteSubject), audit_ref + audit_observer, root_ref (the cloned tree), context_ref, flow, deadlines,
+	 * actions_ref, extra_observers. Members are declared in construction order; DO NOT reorder them (context_ref needs data_ref and
+	 * events_ref; flow, deadlines and actions_ref need *this).
 	 *
 	 * ### Constructor body, in order
 	 *  1. context_ref is built from (id, data_ref, events_ref, services.clock, services.connectors, services.directory);
@@ -133,6 +134,9 @@ namespace tividy
 			 */
 			void cancel(const std::string& reason);
 
+			/** @brief Runs the DeadlineMonitor once (see its sweep()). @return the number of DeadlineMissed events published. */
+			std::size_t sweepDeadlines();
+
 			/** @return a snapshot of every task (via createMemento(); empty pointers skipped), a copy of data_ref and status_ref. */
 			std::unique_ptr<InstanceMemento> captureSnapshot() const;
 
@@ -157,6 +161,7 @@ namespace tividy
 			std::unique_ptr<WorkItem> root_ref;
 			WorkContext context_ref;
 			FlowController flow;
+			DeadlineMonitor deadlines;
 			ActionHistory actions_ref;
 			std::vector<std::unique_ptr<EventObserver> > extra_observers;
 	};

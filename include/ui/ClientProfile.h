@@ -30,7 +30,7 @@ namespace tividy
 	 * two industries can look very different on one engine.
 	 *
 	 * Engine terms the TUI looks up through term(): "workflow", "instance", "item", "participant", "start", "submit", "complete",
-	 * "approve", "reject", "escalate", "cancel", "history", "work-list". Example: telecom maps "instance" -> "Order".
+	 * "approve", "reject", "escalate", "cancel", "history", "work-list". Example: a pack may map "instance" -> "Order".
 	 */
 	struct ClientProfile
 	{
