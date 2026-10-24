@@ -11,5 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: make
+
+      - name: Build dev image
+        run: docker build -t tividy-dev .
+
+      - name: Build and run tests in container
+        run: docker run --rm -v "$PWD":/app -u "$(id -u):$(id -g)" tividy-dev make test
