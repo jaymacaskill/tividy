@@ -18,9 +18,10 @@ Last Modified: 25 October 2026
 WorkflowBuilder.cpp
 */
 
-#ifndef TIVIDY_DEFINITION_WORKFLOWBUILDER_CPP
-#define TIVIDY_DEFINITION_WORKFLOWBUILDER_CPP
+#ifndef TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
+#define TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
 
+/** note: WorkflowDirector public interface is located within the WorkflowBuilder interface */
 #include "engine/definition/WorkflowBuilder.h"
 
 namespace tividy
@@ -28,4 +29,4 @@ namespace tividy
 	WorkflowDirector::~WorkflowDirector() { }
 } // namespace tividy
 
-#endif // TIVIDY_DEFINITION_WORKFLOWBUILDER_CPP
+#endif // TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
