@@ -16,8 +16,6 @@ WorkflowEvent.cpp
 #ifndef TIVIDY_EVENTS_WORKFLOWEVENT_CPP
 #define TIVIDY_EVENTS_WORKFLOWEVENT_CPP
 
-#include <string>
-
 #include "engine/events/WorkflowEvent.h"
 
 namespace tividy
