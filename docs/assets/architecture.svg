@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" width="900" height="720" role="img" aria-labelledby="t d">
+<title id="t">TIVIDY architecture</title><desc id="d">The terminal UI calls the Tividy facade, which fronts the industry-neutral engine. Industry packs for banking, telecom and demo plug into the engine through IndustryPack.</desc>
+<defs>
+<style>
+text{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#0F172A}
+.h{font-size:17px;font-weight:700}
+.s{font-size:12.5px;fill:#475569}
+.c{font-size:14px;font-weight:650}
+.cs{font-size:11.5px;fill:#64748B}
+.tag{font-size:11px;font-weight:700;letter-spacing:.08em;fill:#64748B}
+.lbl{font-size:12px;font-weight:600;fill:#334155}
+</style>
+<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#64748B"/></marker>
+<filter id="sh" x="-5%" y="-5%" width="110%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity=".10"/></filter>
+</defs>
+<rect width="900" height="720" rx="18" fill="#F8FAFC" stroke="#E2E8F0"/>
+<g filter="url(#sh)"><rect x="50" y="28" width="800" height="100" rx="14" fill="#E0F2FE" stroke="#0284C7" stroke-width="1.5"/></g>
+<text x="74" y="56" class="tag">USER INTERFACE</text>
+<text x="74" y="80" class="h">Terminal UI  ·  ui/</text>
+<text x="74" y="100" class="s">What a person sees and types.</text><text x="74" y="117" class="s">No workflow logic of its own.</text>
+<rect x="440" y="50" width="130" height="58" rx="9" fill="#fff" stroke="#7DD3FC"/><text x="505" y="75" text-anchor="middle" class="c">Tui</text><text x="505" y="95" text-anchor="middle" class="cs">menus and screens</text>
+<rect x="580" y="50" width="130" height="58" rx="9" fill="#fff" stroke="#7DD3FC"/><text x="645" y="75" text-anchor="middle" class="c">Console</text><text x="645" y="95" text-anchor="middle" class="cs">real or scripted I/O</text>
+<rect x="720" y="50" width="116" height="58" rx="9" fill="#fff" stroke="#7DD3FC"/><text x="778" y="75" text-anchor="middle" class="c">ClientProfile</text><text x="778" y="95" text-anchor="middle" class="cs">industry wording</text>
+<line x1="450" y1="130" x2="450" y2="166" stroke="#64748B" stroke-width="2" marker-end="url(#ar)"/>
+<text x="464" y="153" class="lbl">calls only through the facade</text>
+<g filter="url(#sh)"><rect x="50" y="170" width="800" height="92" rx="14" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/></g>
+<text x="74" y="198" class="tag">FACADE</text>
+<text x="74" y="222" class="h">Tividy</text>
+<text x="74" y="243" class="s">One simple front door to the whole engine.</text>
+<rect x="334" y="206" width="94" height="30" rx="15" fill="#fff" stroke="#86EFAC"/><text x="381" y="226" text-anchor="middle" class="cs" style="fill:#166534;font-weight:600">installPack()</text>
+<rect x="436" y="206" width="94" height="30" rx="15" fill="#fff" stroke="#86EFAC"/><text x="483" y="226" text-anchor="middle" class="cs" style="fill:#166534;font-weight:600">startWorkflow()</text>
+<rect x="538" y="206" width="94" height="30" rx="15" fill="#fff" stroke="#86EFAC"/><text x="585" y="226" text-anchor="middle" class="cs" style="fill:#166534;font-weight:600">perform()</text>
+<rect x="640" y="206" width="94" height="30" rx="15" fill="#fff" stroke="#86EFAC"/><text x="687" y="226" text-anchor="middle" class="cs" style="fill:#166534;font-weight:600">undo()</text>
+<rect x="742" y="206" width="94" height="30" rx="15" fill="#fff" stroke="#86EFAC"/><text x="789" y="226" text-anchor="middle" class="cs" style="fill:#166534;font-weight:600">advanceTime()</text>
+<line x1="450" y1="264" x2="450" y2="298" stroke="#64748B" stroke-width="2" marker-end="url(#ar)"/>
+<text x="464" y="286" class="lbl">drives</text>
+<g filter="url(#sh)"><rect x="50" y="302" width="800" height="236" rx="14" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/></g>
+<text x="74" y="330" class="tag">ENGINE</text>
+<text x="74" y="352" class="h">Generic workflow engine  ·  engine/</text>
+<text x="826" y="352" text-anchor="end" class="s">Industry-neutral: no banks, no phone companies.</text>
+<rect x="74" y="374" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="88" y="400" class="c">items/</text><text x="88" y="420" class="cs">work items, 9 states,</text><text x="88" y="435" class="cs">iterators, visitors</text>
+<rect x="265" y="374" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="279" y="400" class="c">runtime/</text><text x="279" y="420" class="cs">FlowController, instances,</text><text x="279" y="435" class="cs">deadlines, audit log</text>
+<rect x="456" y="374" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="470" y="400" class="c">policies/</text><text x="470" y="420" class="cs">assignment, routing,</text><text x="470" y="435" class="cs">escalation chain</text>
+<rect x="647" y="374" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="661" y="400" class="c">commands/</text><text x="661" y="420" class="cs">user actions, undo,</text><text x="661" y="435" class="cs">macros, history</text>
+<rect x="74" y="460" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="88" y="486" class="c">definition/</text><text x="88" y="506" class="cs">builders, templates,</text><text x="88" y="521" class="cs">workflow library</text>
+<rect x="265" y="460" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="279" y="486" class="c">events/</text><text x="279" y="506" class="cs">publisher and</text><text x="279" y="521" class="cs">observers</text>
+<rect x="456" y="460" width="181" height="74" rx="10" fill="#fff" stroke="#A5B4FC"/>
+<text x="470" y="486" class="c">connectors/</text><text x="470" y="506" class="cs">adapters to outside</text><text x="470" y="521" class="cs">systems (stubs)</text>
+<rect x="647" y="460" width="181" height="74" rx="10" fill="#FEF3C7" stroke="#F59E0B" stroke-dasharray="5 4"/>
+<text x="661" y="486" class="c">IndustryPack</text><text x="661" y="506" class="cs">the socket every</text><text x="661" y="521" class="cs">industry plugs into</text>
+<line x1="450" y1="606" x2="450" y2="542" stroke="#64748B" stroke-width="2" marker-end="url(#ar)" stroke-dasharray="0"/>
+<text x="464" y="578" class="lbl">plug in through IndustryPack  (Abstract Factory)</text>
+<g filter="url(#sh)"><rect x="50" y="610" width="800" height="90" rx="14" fill="#FFFBEB" stroke="#D97706" stroke-width="1.5"/></g>
+<text x="74" y="632" class="tag">INDUSTRY PACKS  ·  industries/</text>
+<rect x="74" y="644" width="178" height="44" rx="9" fill="#fff" stroke="#FCD34D"/><text x="88" y="663" class="c">Banking</text><text x="88" y="679" class="cs">transaction-dispute</text>
+<rect x="264" y="644" width="178" height="44" rx="9" fill="#fff" stroke="#FCD34D"/><text x="278" y="663" class="c">Telecom</text><text x="278" y="679" class="cs">service-activation</text>
+<rect x="454" y="644" width="178" height="44" rx="9" fill="#fff" stroke="#FCD34D"/><text x="468" y="663" class="c">Demo</text><text x="468" y="679" class="cs">document-approval</text>
+<rect x="644" y="644" width="190" height="44" rx="9" fill="none" stroke="#D97706" stroke-dasharray="5 4"/><text x="739" y="663" text-anchor="middle" class="c" style="fill:#B45309">your next industry</text><text x="739" y="679" text-anchor="middle" class="cs">one folder, one pack</text>
+</svg>
