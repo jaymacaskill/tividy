@@ -1,0 +1,12 @@
+feature:
+  - head-branch: ['^feature/']
+bug:
+  - head-branch: ['^fix/']
+documentation:
+  - head-branch: ['^docs/']
+refactor:
+  - head-branch: ['^refactor/']
+testing:
+  - head-branch: ['^test/']
+chore:
+  - head-branch: ['^chore/']

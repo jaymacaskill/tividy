@@ -7,18 +7,19 @@
 # Thabo Ngwabi (24742512)
 
 # COS 214 (Software Modelling) TIVIDY
-# Last Modified: 6 October 2026
+# Last Modified: 12 October 2026
 
 # Makefile (from interwebs)
 
 
 CXX := g++
-CXXFLAGS := -std=c++11 -Wall -Wextra -Iinclude
+CXXFLAGS := -std=c++11 -Wall -Wextra -Iinclude -MMD -MP
 SRC_DIR := src
 BUILD_DIR := build
 TARGET := tividy
 
-SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
+# Finds every .cpp under src/, including subfolders
+SOURCES := $(shell find $(SRC_DIR) -name '*.cpp')
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
 
 .PHONY: all clean
@@ -28,11 +29,11 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
+
+-include $(OBJECTS:.o=.d)

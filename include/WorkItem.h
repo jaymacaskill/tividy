@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 6 October 2026
+Last Modified: 12 October 2026
 
 WorkItem.h
 */
@@ -26,6 +26,6 @@ using namespace std;
 class WorkItem
 {
     // methods & attributes here with doxygen-style comments
-}
+};
 
 #endif // WORKITEM_H

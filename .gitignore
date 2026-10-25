@@ -1,0 +1,11 @@
+/build/
+/tividy
+*.o
+*.d
+*.out
+*.exe
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

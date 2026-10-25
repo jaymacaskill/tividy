@@ -2,6 +2,8 @@
 
 COS 214 Project — *From research to a working engine*
 
+See <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> to learn about how we work on this repository.
+
 <p align="center">
   <img src="https://i.pinimg.com/1200x/4a/00/ee/4a00ee5a5a9ac67a26fc0d3e44123dab.jpg" height="200" />
 </p>
@@ -180,3 +182,4 @@ Phase 2 will turn the Phase 1 blueprint into a working C++11 implementation of T
 Phase 1 work is primarily preserved in `docs/archive/`. Phase 2 will be built on top of it.
 
 ---
+
