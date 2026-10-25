@@ -95,6 +95,11 @@ namespace tividy
 		sent_ref.push_back(line);
 		return ConnectorResult::ok(line);
 	}
+
+	const std::vector<std::string>& LoggingNotifier::sent() const
+	{
+		return sent_ref;
+	}
 } // namespace tividy
 
 #endif // TIVIDY_CONNECTORS_EXTERNALCONNECTOR_CPP
