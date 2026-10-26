@@ -8,14 +8,9 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 26 October 2026
 
-
-
-COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-WorkflowBuilder.cpp
+WorkflowDirector.cpp
 */
 
 #ifndef TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
@@ -28,5 +23,13 @@ namespace tividy
 {
 	WorkflowDirector::~WorkflowDirector() { }
 } // namespace tividy
+
+std::unique_ptr<tividy::WorkflowDefinition> tividy::WorkflowDirector::build(
+	tividy::WorkflowBuilder& builder) const
+{
+	builder.reset(workflowName(), version(), description());
+	construct(builder);
+	return builder.getResult();
+}
 
 #endif // TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
