@@ -5,7 +5,9 @@
 *.out
 *.exe
 .vscode/
+docs/doxygen/
 .idea/
 *.swp
 .DS_Store
 Thumbs.db
+*.zip

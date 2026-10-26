@@ -1,0 +1,9 @@
+build/
+.git/
+docs/doxygen/
+docs/api/
+third_party/
+*.o
+*.d
+*.a
+tividy
