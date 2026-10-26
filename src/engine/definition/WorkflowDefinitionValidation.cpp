@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
+Last Modified: 26 October 2026
 */
 
 /**
@@ -66,18 +66,25 @@ std::vector<std::string> tividy::WorkflowDefinition::validationProblems() const
 	template_root->accept(collector);
 
 	std::map<tividy::Id, const tividy::WorkItemSpec*> by_id;
+	std::map<tividy::Id, std::set<tividy::Id> > parents;
 	std::set<tividy::Id> duplicate_ids;
 	std::vector<const tividy::WorkItemSpec*> specs;
-	std::vector<tividy::WorkItem*> pending(1, template_root.get());
+	std::vector<std::pair<tividy::WorkItem*, const tividy::WorkItemSpec*> > pending;
+	pending.emplace_back(template_root.get(), nullptr);
 
 	// Collect every id before checking dependencies, so forward references work.
 	while (!pending.empty())
 	{
-		tividy::WorkItem* item = pending.back();
+		const auto entry = pending.back();
 		pending.pop_back();
+		tividy::WorkItem* item = entry.first;
 		const tividy::WorkItemSpec& spec = item->spec();
 		const std::vector<tividy::WorkItem*> children = item->children();
 		specs.push_back(&spec);
+		if (entry.second)
+		{
+			parents[spec.id()].insert(entry.second->id());
+		}
 
 		if (!by_id.insert(std::make_pair(spec.id(), &spec)).second &&
 			duplicate_ids.insert(spec.id()).second)
@@ -111,7 +118,10 @@ std::vector<std::string> tividy::WorkflowDefinition::validationProblems() const
 			problems.push_back("automatic item '" + spec.id() + "' must not have a deadline");
 		}
 
-		pending.insert(pending.end(), children.rbegin(), children.rend());
+		for (auto child = children.rbegin(); child != children.rend(); ++child)
+		{
+			pending.emplace_back(*child, &spec);
+		}
 	}
 
 	std::map<tividy::Id, std::set<tividy::Id> > dependencies;
@@ -150,18 +160,40 @@ std::vector<std::string> tividy::WorkflowDefinition::validationProblems() const
 		}
 	}
 
-	/** Three-colour DFS reports cycles without treating shared prerequisites as cycles. */
-	enum class VisitState { Unvisited, Visiting, Visited };
-	std::map<tividy::Id, VisitState> states;
-	std::vector<tividy::Id> path;
-	std::function<void(const tividy::Id&)> visit;
-
-	visit = [&](const tividy::Id& id)
+	// Readiness and completion are separate: a parent's dependencies gate its
+	// children, while its completion waits for every child to settle.
+	enum class DependencyPhase { Ready, Settled };
+	typedef std::pair<tividy::Id, DependencyPhase> DependencyNode;
+	std::map<DependencyNode, std::set<DependencyNode> > waits_for;
+	for (const auto& item : by_id)
 	{
-		states[id] = VisitState::Visiting;
-		path.push_back(id);
+		const DependencyNode ready(item.first, DependencyPhase::Ready);
+		const DependencyNode settled(item.first, DependencyPhase::Settled);
+		waits_for[settled].insert(ready);
+		for (const tividy::Id& predecessor : dependencies[item.first])
+		{
+			waits_for[ready].insert(DependencyNode(predecessor, DependencyPhase::Settled));
+		}
+		for (const tividy::Id& parent : parents[item.first])
+		{
+			waits_for[ready].insert(DependencyNode(parent, DependencyPhase::Ready));
+			waits_for[DependencyNode(parent, DependencyPhase::Settled)].insert(settled);
+		}
+	}
 
-		for (const tividy::Id& predecessor : dependencies[id])
+	/** Three-colour DFS includes inherited gates and stage completion constraints. */
+	enum class VisitState { Unvisited, Visiting, Visited };
+	std::map<DependencyNode, VisitState> states;
+	std::vector<DependencyNode> path;
+	std::set<std::string> reported_cycles;
+	std::function<void(const DependencyNode&)> visit;
+
+	visit = [&](const DependencyNode& node)
+	{
+		states[node] = VisitState::Visiting;
+		path.push_back(node);
+
+		for (const DependencyNode& predecessor : waits_for[node])
 		{
 			if (states[predecessor] == VisitState::Unvisited)
 			{
@@ -172,24 +204,39 @@ std::vector<std::string> tividy::WorkflowDefinition::validationProblems() const
 				std::ostringstream cycle;
 				cycle << "dependency cycle: ";
 				const auto first = std::find(path.begin(), path.end(), predecessor);
+				std::vector<tividy::Id> ids;
 				for (auto item = first; item != path.end(); ++item)
 				{
-					cycle << *item << " -> ";
+					if (ids.empty() || ids.back() != item->first)
+					{
+						ids.push_back(item->first);
+					}
 				}
-				cycle << predecessor;
-				problems.push_back(cycle.str());
+				if (ids.size() == 1 || ids.back() != predecessor.first)
+				{
+					ids.push_back(predecessor.first);
+				}
+				for (std::size_t i = 0; i < ids.size(); ++i)
+				{
+					if (i != 0) cycle << " -> ";
+					cycle << ids[i];
+				}
+				if (reported_cycles.insert(cycle.str()).second)
+				{
+					problems.push_back(cycle.str());
+				}
 			}
 		}
 
 		path.pop_back();
-		states[id] = VisitState::Visited;
+		states[node] = VisitState::Visited;
 	};
 
-	for (const auto& item : by_id)
+	for (const auto& node : waits_for)
 	{
-		if (states[item.first] == VisitState::Unvisited)
+		if (states[node.first] == VisitState::Unvisited)
 		{
-			visit(item.first);
+			visit(node.first);
 		}
 	}
 
