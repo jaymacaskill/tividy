@@ -195,6 +195,7 @@ namespace tividy
 
     void AssignedState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
     {
+        recordResult(item,  ,Outcome::rejected(outcome_code, reason));
         moveTo(item, CompletedState::instance());
         emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
     }
@@ -261,6 +262,7 @@ namespace tividy
 
     void InProgressState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
     {
+        recordResult(item,  ,Outcome::rejected(outcome_code, reason));
         moveTo(item, CompletedState::instance());
         emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
     }
@@ -276,7 +278,133 @@ namespace tividy
         return instance;
     }
 
+    ItemStatus UnderReviewState::status() const
+    {
+        return ItemStatus::UnderReview;
+    }
+
+    void UnderReviewState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
+    {
+        moveTo(item, CompletedState::instance());
+        emit(item, EventType::ItemCompleted, reviewer.id(), outcome, "Item approved and completed by reviewer.");
+    }
+
+    void UnderReviewState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
+    {
+        unsigned rejectCount = bumpRejections(item);
+        if (rejectCount < item.spec().maxRetries())
+        {
+            moveTo(item, InProgressState::instance());
+            emit(item, EventType::ItemRejected, reviewer.id(), Outcome::rejected("REJECTED", reason), "Item rejected by reviewer. Returning to InProgress.");
+        }
+        else
+        {
+            moveTo(item, CancelledState::instance());
+            emit(item, EventType::ItemCancelled, reviewer.id(), Outcome::rejected("CANCELLED", reason), "Item rejected by reviewer. Max retries exceeded, item cancelled.");
+        }
+    }
+
+    void UnderReviewState::escalate(TaskItem& item, const std::string& reason) const
+    {
+        moveTo(item, EscalatedState::instance());
+        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.");
+    }
     
+    void UnderReviewState::cancel(TaskItem& item, const std::string& reason) const
+    {
+        moveTo(item, CancelledState::instance());
+        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+    }
+
+    void UnderReviewState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
+    {
+        recordResult(item,  ,Outcome::rejected(outcome_code, reason));
+        moveTo(item, CompletedState::instance());
+        emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
+    }
+
+    //End of UnderReviewState implementation
+
+
+    //EscalatedState implementation
+    const EscalatedState& EscalatedState::instance()
+    {
+        static EscalatedState instance;
+        return instance;
+    }
+
+    ItemStatus EscalatedState::status() const
+    {
+        return ItemStatus::Escalated;
+    }
+
+    void EscalatedState::assign(TaskItem& item, const Id& participant_id) const
+    {
+        setAssignee(item, participant_id);
+        emit(item, EventType::ItemAssigned, participant_id, Outcome(), "Escalation approver assigned to item.");
+    }
+
+    void EscalatedState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
+    {
+        runWork(item, reviewer, outcome);
+        moveTo(item, CompletedState::instance());
+    }
+
+    void EscalatedState::cancel(TaskItem& item, const std::string& reason) const
+    {
+        moveTo(item, CancelledState::instance());
+        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+    }
+
+    //End of EscalatedState implementation
+
+
+    //CompletedState implementation
+
+    const CompletedState& CompletedState::instance()
+    {
+        static CompletedState instance;
+        return instance;
+    }
+
+    ItemStatus CompletedState::status() const
+    {
+        return ItemStatus::Completed;
+    }
+
+    //End of CompletedState implementation
+
+
+    //CancelledState implementation
+
+    const CancelledState& CancelledState::instance()
+    {
+        static CancelledState instance;
+        return instance;
+    }
+
+    ItemStatus CancelledState::status() const
+    {
+        return ItemStatus::Cancelled;
+    }
+
+    //End of CancelledState implmentation
+
+
+    //SkippedState implementation
+
+    const SkippedState& SkippedState::instance()
+    {
+        static SkippedState instance;
+        return instance;
+    }
+
+    ItemStatus SkippedState::status() const
+    {
+        return ItemStatus::Skipped;
+    }
+
+    //End of SkippedState implementation
 
 }
 
