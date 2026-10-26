@@ -19,9 +19,15 @@ FlowControllerRouting.cpp
 #include <stdexcept>
 
 #include "engine/runtime/FlowController.h"
+#include "engine/runtime/WorkflowInstance.h"
 
 namespace tividy
 {
+	// Ruan owns construction/destruction, the FIFO drain, all event reactions and evaluateInstance().
+	// On ItemCompleted: choose strategy -> decide -> applyDecision -> releaseEligible -> evaluateInstance.
+	// Invariants for Connor's implementation: only Created leaves can be released; ancestor gates apply;
+	// children retain their documented order; Completed/Skipped are settled, Cancelled is not.
+	// Jay must resolve targets appearing in both decision vectors before that case is implemented.
 	/**
 	 * @brief Applies a RoutingStrategy decision to the instance's work-item tree.
 	 * @param decision The ordered activation and skip targets produced by a routing policy.
