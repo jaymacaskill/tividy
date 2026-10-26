@@ -38,7 +38,7 @@ namespace tividy
         return std::vector<WorkItem*>();
     }
 
-    WorkItem& WorkItem::add(std::unique_ptr<WorkItem> child) {
+    WorkItem& WorkItem::add(std::unique_ptr<WorkItem> /* child */) {
         throw UnsupportedOperationError("Work item " + spec().id() + " cannot have children: add() is only supported by a StageItem");
     }
     
@@ -46,7 +46,7 @@ namespace tividy
         return std::unique_ptr<WorkItemMemento>();
     }
     
-    void WorkItem::restore(const WorkItemMemento& memento) {
+    void WorkItem::restore(const WorkItemMemento& /* memento */) {
         // Do nothing 
     }
 
