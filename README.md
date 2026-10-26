@@ -180,7 +180,7 @@ Every diagram is an SVG you can open directly, with its editable **Visual Paradi
 ### State diagram
 
 <p align="center">
-  <a href="docs/img/final/state-workitem-lifecycle.svg"><img src="docs/img/final/state-workitem-lifecycle.svg" height="360" alt="Work item lifecycle"/></a>
+  <a href="docs/img/final/state_workitem_lifecycle.svg"><img src="docs/img/final/state_workitem_lifecycle.svg" height="360" alt="Work item lifecycle"/></a>
   <br/><sub>The nine states of a work item and every legal transition</sub>
   <br/><a href="docs/vpp/state_workitem_lifecycle.vpp">Available in Visual Paradigm format</a>
 </p>
