@@ -23,11 +23,26 @@ BankingAdapters.cpp
 #define TIVIDY_BANKING_ADAPTERS_CPP
 
 #include <stdexcept>
+#include <cmath>
 
 #include "industries/banking/BankingParts.h"
 
 namespace tividy
 {
+	namespace
+	{
+		bool isIssuedLedgerRef(const std::string& ref, unsigned issued)
+		{
+			const std::string prefix = "LEDGER-";
+			if (ref.size() <= prefix.size() || ref.compare(0, prefix.size(), prefix) != 0)
+				return false;
+			const std::string digits = ref.substr(prefix.size());
+			if (digits.size() > 9 || digits[0] == '0'
+				|| digits.find_first_not_of("0123456789") != std::string::npos)
+				return false;
+			return std::stoul(digits) <= issued;
+		}
+	}
 	namespace banking
 	{
 		/*
@@ -51,12 +66,13 @@ namespace tividy
 				throw std::runtime_error("core banking unavailable");
 			}
 
-			int amnt;
-			try { amnt = std::stoi(amount); }
-			catch(const std::exception&) { throw std::invalid_argument("amount must be positive"); }
-
-			if (amnt <= 0)
-				throw std::invalid_argument("amount must be positive");
+			double value = 0.0;
+			std::size_t used = 0;
+			try { value = std::stod(amount, &used); }
+			catch (const std::exception&) { throw std::invalid_argument("amount must be a positive number"); }
+			
+			if (used != amount.size() || !std::isfinite(value) || !(value > 0.0))
+				throw std::invalid_argument("amount must be a positive number");
 
 			counter ++;
 			return "LEDGER-" + std::to_string(counter);
@@ -70,7 +86,7 @@ namespace tividy
 				throw std::runtime_error("core banking unavailable");
 			}
 
-			if (ledger_ref.empty() || ledger_ref.substr(0, 7) != "LEDGER-")
+			if (!isIssuedLedgerRef(ledger_ref, counter))
 				throw std::invalid_argument("unknown ledger reference");
 		}
 
@@ -82,7 +98,7 @@ namespace tividy
 				throw std::runtime_error("core banking unavailable");
 			}
 
-			if (ledger_ref.empty() || ledger_ref.substr(0, 7) != "LEDGER-")
+			if (!isIssuedLedgerRef(ledger_ref, counter))
 				throw std::invalid_argument("unknown ledger reference");
 		}
 
@@ -98,7 +114,7 @@ namespace tividy
 			if (failures_left > 0)
 			{
 				failures_left --;
-				throw std::runtime_error("card scheme unavailable");
+				throw std::runtime_error("scheme unavailable");
 			}
 			return "CASE-" + transaction_id;
 		}
