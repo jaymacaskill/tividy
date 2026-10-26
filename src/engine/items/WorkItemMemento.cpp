@@ -24,7 +24,7 @@ namespace tividy
 
     WorkItemMemento::WorkItemMemento()
         : status(ItemStatus::Created),
-          assignee(0),
+          assignee(""),
           assigned_at(TimePoint()),
           rejections(0),
           failures(0),
