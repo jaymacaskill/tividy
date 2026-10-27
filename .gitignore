@@ -10,3 +10,4 @@ docs/doxygen/
 *.swp
 .DS_Store
 Thumbs.db
+*.zip
