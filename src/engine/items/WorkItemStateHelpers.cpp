@@ -31,8 +31,8 @@ namespace tividy
         item.state = &next;
     }
 
-    void WorkItemState::emit(TaskItem& item, EventType type, const Id& actor_id, const Outcome& outcome, 
-        const std::string& message, unsigned count)
+    void WorkItemState::emit(TaskItem& item, EventType type, const Id& /*actor_id*/, const Outcome& /*outcome*/, 
+        const std::string& /*message*/, unsigned /*count*/)
     {
         item.context().events().notify(WorkflowEvent(type, item.context().instanceId(), item.spec().id(), item.context().clock().now()));
     }
