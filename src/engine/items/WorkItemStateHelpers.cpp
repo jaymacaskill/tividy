@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
+Last Modified: 27 October 2026
 */
 
 #ifndef TIVIDY_ITEMS_WORKITEMSTATE_CPP
@@ -20,6 +20,8 @@ Last Modified: 26 October 2026
 #include "engine/core/Types.h"
 #include "engine/core/Outcome.h"
 #include "engine/items/WorkContext.h"
+#include "engine/core/Participant.h"
+#include "engine/items/WorkItemSpec.h"
 #include <string>
 
 namespace tividy
@@ -32,7 +34,7 @@ namespace tividy
     void WorkItemState::emit(TaskItem& item, EventType type, const Id& actor_id, const Outcome& outcome, 
         const std::string& message, unsigned count)
     {
-        item.context(). (item, type, actor_id, outcome, message, count);
+        item.context().events().notify(WorkflowEvent(type, item.context().instanceId(), item.spec().id(), item.context().clock().now()));
     }
 
     void WorkItemState::setAssignee(TaskItem& item, const Id& participant_id)
@@ -45,7 +47,21 @@ namespace tividy
     }
 
     bool WorkItemState::runWork(TaskItem& item, const Participant& actor, Outcome& outcome)
-    { 
+    {
+        item.validateOutcome(outcome);
+        try
+        {
+            item.performWork(actor, outcome);
+        }
+        catch(const ExternalFailure& e)
+        {
+            ++item.failures_ref;
+            return false;
+        }
+        
+        item.onCompleted(outcome);
+        return true;
+        
     }
 
     void WorkItemState::recordResult(TaskItem& item, const Participant& actor, const Outcome& outcome)
@@ -80,4 +96,4 @@ namespace tividy
     }
 }
 
-#endif
+#endif //TIVIDY_ITEMS_WORKITEMSTATE_CPP

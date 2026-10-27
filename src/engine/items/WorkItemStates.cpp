@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
+Last Modified: 27 October 2026
 */
 
 #ifndef TIVIDY_ITEMS_WORKITEMSTATE_CPP
@@ -22,6 +22,11 @@ Last Modified: 26 October 2026
 
 namespace tividy
 {
+    const Participant& system_actor()
+    {
+        static const Participant p("system", "System", std::set<std::string>());
+        return p;
+    }
     /*
     void WorkItemState::publish(TaskItem& item) const
     {
@@ -195,7 +200,7 @@ namespace tividy
 
     void AssignedState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
     {
-        recordResult(item,  ,Outcome::rejected(outcome_code, reason));
+        recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
         moveTo(item, CompletedState::instance());
         emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
     }
@@ -262,7 +267,7 @@ namespace tividy
 
     void InProgressState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
     {
-        recordResult(item,  ,Outcome::rejected(outcome_code, reason));
+        recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
         moveTo(item, CompletedState::instance());
         emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
     }
@@ -318,7 +323,7 @@ namespace tividy
 
     void UnderReviewState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
     {
-        recordResult(item,  ,Outcome::rejected(outcome_code, reason));
+        recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
         moveTo(item, CompletedState::instance());
         emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
     }
@@ -346,7 +351,8 @@ namespace tividy
 
     void EscalatedState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
     {
-        runWork(item, reviewer, outcome);
+        Outcome edit = outcome;
+        runWork(item, reviewer, edit);
         moveTo(item, CompletedState::instance());
     }
 
