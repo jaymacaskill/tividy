@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "include/engine/events/Observer.h"
-#include "include/engine/events/WorkflowEvent.h"
+#include "engine/events/Observer.h"
+#include "engine/events/WorkflowEvent.h"
 
 namespace tividy 
 {
