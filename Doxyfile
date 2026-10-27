@@ -21,3 +21,5 @@ WARN_IF_DOC_ERROR      = YES
 WARN_NO_PARAMDOC       = NO
 QUIET                  = YES
 HAVE_DOT               = NO
+HTML_COLORSTYLE_HUE    = 280
+PROJECT_LOGO           = docs/assets/tividy_logo.jpg
