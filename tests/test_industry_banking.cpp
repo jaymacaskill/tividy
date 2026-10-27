@@ -29,6 +29,7 @@ test_industry_banking.cpp
 #include "engine/definition/WorkflowBuilder.h"
 #include "engine/events/Observer.h"
 #include "engine/facade/IndustryPack.h"
+#include "engine/facade/Tividy.h"
 #include "engine/items/WorkContext.h"
 #include "engine/items/WorkItemDecorator.h"
 #include "industries/banking/BankingPack.h"
@@ -1146,4 +1147,192 @@ namespace tividy
 			EXPECT_EQ(6u, definition->policies().routing.size());
 		}
 	} // namespace banking
+} // namespace tividy
+
+/*
+SMOKE TESTS: the whole banking industry through the Tividy facade, exactly as the TUI drives it. Each test installs the real BankingPack,
+starts a dispute and walks it to the end by performing actions as the pack's own participants.
+Ids come from BankingPack::createParticipants(): banking-cust-1, banking-agent-1, banking-merchant-1, banking-analyst-1, banking-senior-1.
+These need the whole engine, so they run once the facade, the pack and its adapters are merged. They only use the public Tividy API.
+*/
+
+namespace tividy
+{
+	namespace
+	{
+		const char* const CUSTOMER = "banking-cust-1";
+		const char* const AGENT = "banking-agent-1";
+		const char* const MERCHANT = "banking-merchant-1";
+
+		struct SmokeBank
+		{
+			SmokeBank() :
+				tividy()
+			{
+				tividy.installPack(std::unique_ptr<IndustryPack>(new banking::BankingPack()));
+			}
+
+			Id startDispute()
+			{
+				WorkflowData data;
+				data.set("transaction_id", "TX-1001");
+				data.set("amount", "250.00");
+				data.set("reason_code", "FRAUD");
+				data.set("card_ref", "CARD-1");
+				data.set("merchant_name", "Acme Stores");
+				return tividy.startWorkflow("transaction-dispute", data);
+			}
+
+			// the person starts the item and then completes it with the given outcome: the two actions every human step needs
+			CommandResult step(const Id& instance, const std::string& item, const Id& actor, const Outcome& outcome = Outcome::accepted())
+			{
+				CommandResult started = tividy.perform("start", instance, item, actor);
+				if (!started.success) return CommandResult::failure(item + " could not start: " + started.message);
+
+				CommandResult done = tividy.perform("complete", instance, item, actor, outcome);
+				if (!done.success) return CommandResult::failure(item + " could not complete: " + done.message);
+
+				return done;
+			}
+
+			// the three steps every dispute shares before the merchant is asked anything
+			void runIntake(const Id& instance)
+			{
+				CommandResult lodged = step(instance, "lodge_dispute", CUSTOMER);
+				ASSERT_TRUE(lodged.success) << lodged.message;
+
+				CommandResult assessed = step(instance, "assess_eligibility", AGENT);
+				ASSERT_TRUE(assessed.success) << assessed.message;
+
+				CommandResult credited = step(instance, "issue_provisional_credit", AGENT);
+				ASSERT_TRUE(credited.success) << credited.message;
+			}
+
+			InstanceStatus statusOf(const Id& instance)
+			{
+				return tividy.instance(instance).status();
+			}
+
+			Tividy tividy;
+		};
+	} // anonymous namespace
+
+	TEST(BankingSmokeTest, ThePackInstallsAndTheWorkflowIsListed)
+	{
+		SmokeBank bank;
+		ASSERT_EQ(1u, bank.tividy.packKeys().size());
+		EXPECT_EQ("banking", bank.tividy.packKeys()[0]);
+		EXPECT_EQ("banking", bank.tividy.packOf("transaction-dispute"));
+		EXPECT_FALSE(bank.tividy.profile("banking").product_name.empty());
+	}
+
+	TEST(BankingSmokeTest, StartingADisputeRunsItAndGivesTheCustomerFirstTask)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+
+		EXPECT_EQ(InstanceStatus::Running, bank.statusOf(id));
+
+		std::vector<WorkItemView> work = bank.tividy.workFor(CUSTOMER);
+		ASSERT_EQ(1u, work.size());
+		EXPECT_EQ("lodge_dispute", work[0].item_id);
+		EXPECT_TRUE(bank.tividy.workFor(AGENT).empty()) << "nothing is the agent's until the customer has lodged";
+	}
+
+	TEST(BankingSmokeTest, TheWrongPartyCannotActOnAnItem)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+
+		EXPECT_FALSE(bank.tividy.perform("start", id, "lodge_dispute", AGENT).success);
+		EXPECT_FALSE(bank.tividy.perform("start", id, "lodge_dispute", "nobody").success);
+		EXPECT_EQ(InstanceStatus::Running, bank.statusOf(id));
+	}
+
+	TEST(BankingSmokeTest, TheMerchantAcceptingLiabilityEndsInACustomerSettlement)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+		bank.runIntake(id);
+
+		CommandResult answered = bank.step(id, "merchant_response", MERCHANT, Outcome::accepted("ACCEPT_LIABILITY", "we agree"));
+		ASSERT_TRUE(answered.success) << answered.message;
+
+		EXPECT_EQ(InstanceStatus::Completed, bank.statusOf(id));
+		EXPECT_EQ("CUSTOMER", bank.tividy.instance(id).data().get("settlement"));
+		EXPECT_DOUBLE_EQ(100.0, bank.tividy.progress(id).percent_settled);
+	}
+
+	TEST(BankingSmokeTest, AnIneligibleDisputeIsClosedWithoutAnyCredit)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+
+		ASSERT_TRUE(bank.step(id, "lodge_dispute", CUSTOMER).success);
+		ASSERT_TRUE(bank.step(id, "assess_eligibility", AGENT, Outcome::accepted("INELIGIBLE", "outside the window")).success);
+		ASSERT_TRUE(bank.step(id, "close_ineligible", AGENT).success);
+
+		EXPECT_EQ(InstanceStatus::Completed, bank.statusOf(id));
+		EXPECT_EQ("", bank.tividy.instance(id).data().getOr("ledger_ref", "")) << "no provisional credit should have been posted";
+	}
+
+	TEST(BankingSmokeTest, ASilentMerchantLosesWhenTheDeadlineLapses)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+		bank.runIntake(id);
+
+		EXPECT_EQ(InstanceStatus::Running, bank.statusOf(id));
+		EXPECT_GE(bank.tividy.advanceTime(15L * 24 * 60 * 60), 1u) << "the 14 day merchant deadline should have lapsed";
+
+		EXPECT_EQ(InstanceStatus::Completed, bank.statusOf(id));
+		EXPECT_EQ("CUSTOMER", bank.tividy.instance(id).data().get("settlement"));
+	}
+
+	TEST(BankingSmokeTest, TheMerchantMustExplainEvidenceItSubmits)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+		bank.runIntake(id);
+
+		ASSERT_TRUE(bank.tividy.perform("start", id, "merchant_response", MERCHANT).success);
+		CommandResult empty = bank.tividy.perform("complete", id, "merchant_response", MERCHANT, Outcome::accepted("EVIDENCE_SUBMITTED", ""));
+
+		EXPECT_FALSE(empty.success);
+		EXPECT_EQ(InstanceStatus::Running, bank.statusOf(id));
+	}
+
+	TEST(BankingSmokeTest, TheCustomerWithdrawingCancelsTheDispute)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+		ASSERT_TRUE(bank.step(id, "lodge_dispute", CUSTOMER).success);
+
+		bank.tividy.signal(id, "customer-withdrew");
+
+		EXPECT_EQ(InstanceStatus::Cancelled, bank.statusOf(id));
+	}
+
+	TEST(BankingSmokeTest, EveryActionIsInTheHistory)
+	{
+		SmokeBank bank;
+		Id id = bank.startDispute();
+		ASSERT_TRUE(bank.step(id, "lodge_dispute", CUSTOMER).success);
+
+		EXPECT_FALSE(bank.tividy.history(id).empty());
+	}
+
+	TEST(BankingSmokeTest, TwoDisputesRunIndependently)
+	{
+		SmokeBank bank;
+		Id first = bank.startDispute();
+		Id second = bank.startDispute();
+
+		ASSERT_NE(first, second);
+		ASSERT_TRUE(bank.step(first, "lodge_dispute", CUSTOMER).success);
+		bank.tividy.signal(first, "customer-withdrew");
+
+		EXPECT_EQ(InstanceStatus::Cancelled, bank.statusOf(first));
+		EXPECT_EQ(InstanceStatus::Running, bank.statusOf(second));
+	}
 } // namespace tividy
