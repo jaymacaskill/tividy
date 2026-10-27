@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 25 October 2026
 */
 
 /**
@@ -61,6 +61,11 @@ namespace tividy
 	/**
 	 * @brief Rule computed from workflow data: the participant id is stored under @c data_key (e.g. "mentor_id").
 	 * If the key is absent, or names a participant who lacks @p role (when role is non-empty), the fallback decides.
+	 * @note The fallbackis set at construction and immutable afterwards. This prevents the caller from
+	 * accidentally creating a fallback cycle (A → B → A) which would cause infinite recursion.
+	 * ChainedDataDrivenAssignmentinstances are permitted and terminate at the first
+	 * non-DataDrivenAssignmentfallback, but twoDataDrivenAssignments with the samedata_key` will do the same lookup
+	 * twice which is redundant, but not infinite.
 	 */
 	class DataDrivenAssignment : public AssignmentStrategy
 	{
