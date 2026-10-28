@@ -17,57 +17,118 @@ FlowControllerRouting.cpp
 #define TIVIDY_RUNTIME_FLOWCONTROLLER_ROUTING_CPP
 
 #include <stdexcept>
+#include <functional>
 
 #include "engine/runtime/FlowController.h"
 #include "engine/runtime/WorkflowInstance.h"
 
 namespace tividy
 {
-	// Ruan owns construction/destruction, the FIFO drain, all event reactions and evaluateInstance().
-	// On ItemCompleted: choose strategy -> decide -> applyDecision -> releaseEligible -> evaluateInstance.
-	// Invariants for Connor's implementation: only Created leaves can be released; ancestor gates apply;
-	// children retain their documented order; Completed/Skipped are settled, Cancelled is not.
-	// Jay must resolve targets appearing in both decision vectors before that case is implemented.
 	/**
 	 * @brief Applies a RoutingStrategy decision to the instance's work-item tree.
-	 * @param decision The ordered activation and skip targets produced by a routing policy.
-	 * @pre Called by FlowController::react() after a completed item has selected its routing policy.
-	 * @details The agreed contract is to process activation targets before skip targets. Unknown targets or
-	 *          targets in an incompatible status are reported as EngineNote events; valid targets use the
-	 *          WorkItem lifecycle operations. RoutingStrategy is the Strategy participant; FlowController
-	 *          is its context and owns applying the returned decision.
-	 * @note Integration boundary with Ruan: react() selects the per-source policy from DefinitionPolicies,
-	 *       calls decide(finished, outcome, data), and passes that value here before calling
-	 *       releaseEligible() and evaluateInstance(). This method does not select a policy or handle events.
-	 * @todo Implement the decision traversal under the approved routing tests. This scaffold intentionally
-	 *       fails loudly instead of reporting a false success.
-	 * @throws std::logic_error Until this scaffold is replaced by the implementation.
+	 * @param decision The activation and skip targets returned by a routing policy.
+	 * @details Activation targets are processed first. An activation target is published only when it resolves
+	 *          to an item in Created status; a skip target is skipped only when it resolves to an item in Created
+	 *          or Available status. Missing targets and targets in other statuses produce an EngineNote event
+	 *          stating that routing ignored the target. This method applies the supplied decision; it does not
+	 *          select a routing policy or handle events.
 	 */
-	void FlowController::applyDecision(const RoutingDecision& decision)
+
+	void FlowController::applyDecision(const RoutingDecision &decision)
 	{
-		(void)decision;
-		throw std::logic_error("FlowController::applyDecision is scaffold-only; implement through TDD");
+		// Report invalid routing targets
+		auto reportIgnored = [this](const Id &id)
+		{
+			WorkflowEvent event(
+				EventType::EngineNote,
+				instance.id(),
+				id,
+				instance.context().clock().now());
+
+			event.withMessage("routing ignored " + id);
+			instance.events().notify(event);
+		};
+
+		// Activate selected tasks
+		for (const Id &id : decision.activate)
+		{
+			WorkItem *item = instance.root().find(id);
+
+			if (!item || item->status() != ItemStatus::Created)
+			{
+				reportIgnored(id);
+				continue;
+			}
+
+			item->publish();
+		}
+
+		// Skip unselected tasks
+		for (const Id &id : decision.skip)
+		{
+			WorkItem *item = instance.root().find(id);
+
+			if (!item ||
+				(item->status() != ItemStatus::Created &&
+				 item->status() != ItemStatus::Available))
+			{
+				reportIgnored(id);
+				continue;
+			}
+
+			item->skip("branch not taken");
+		}
 	}
 
 	/**
 	 * @brief Publishes every currently eligible leaf work item as Available.
-	 * @pre The instance and its root item tree are alive; a non-Running instance is a no-op per the class contract.
-	 * @details The approved rule is a pre-order traversal. A non-composite item is eligible when it is Created
-	 *          and every dependency on that item and each ancestor StageItem resolves to a settled item.
-	 *          WorkItem::publish() emits ItemAvailable, which Ruan's event handler queues and drains without
-	 *          recursive event processing. Composite stage nodes themselves are not published.
-	 *          The agreed behavior is a no-op when the instance is not Running.
-	 * @note Integration boundary with Ruan: onEvent()/react() may call this after ItemCompleted or ItemSkipped;
-	 *       WorkflowInstance::start() also calls it directly. Errors raised while releasing work therefore need
-	 *       an agreed policy for both event-driven and direct-start callers.
-	 * @todo Implement the traversal and dependency checks under the approved routing tests. This scaffold
-	 *       intentionally fails loudly instead of silently leaving work unavailable.
-	 * @throws std::logic_error Until this scaffold is replaced by the implementation.
+	 * @details Does nothing unless the instance is Running. Otherwise, visits the root tree in pre-order.
+	 *          An item is traversed only if all of its dependencies resolve to items in a settled status; this
+	 *          also means an unmet dependency on a composite stage blocks traversal of its descendants. A
+	 *          composite item is not published. A leaf item is published when its status is Created.
+	 *          Publishing makes the item Available and emits the corresponding item event.
 	 */
+
 	void FlowController::releaseEligible()
 	{
-		throw std::logic_error("FlowController::releaseEligible is scaffold-only; implement through TDD");
+		if (instance.status() != InstanceStatus::Running)
+			return;
+
+		std::function<void(WorkItem &, bool)> visit;
+
+		visit = [&](WorkItem &item, bool ancestorsReady)
+		{
+			if (!ancestorsReady)
+				return;
+
+			// Check this item's dependencies
+			for (const Id &dependency : item.spec().dependencies())
+			{
+				WorkItem *required = instance.root().find(dependency);
+
+				if (!required || !isSettled(required->status()))
+					return;
+			}
+
+			// Recursively visit children of composite stages
+			std::vector<WorkItem *> children = item.children();
+
+			if (!children.empty())
+			{
+				for (WorkItem *child : children)
+					visit(*child, true);
+
+				return;
+			}
+
+			// Only release eligible tasks
+			if (item.status() == ItemStatus::Created)
+				item.publish();
+		};
+
+		visit(instance.root(), true);
 	}
+
 } // namespace tividy
 
 #endif // TIVIDY_RUNTIME_FLOWCONTROLLER_ROUTING_CPP
