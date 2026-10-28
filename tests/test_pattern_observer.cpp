@@ -63,6 +63,21 @@ namespace tividy
 				EventObserver* to_attach;
 		};
 
+		class DetachingObserver : public EventObserver
+		{
+			public:
+				explicit DetachingObserver(EventSubject* s) : subject_ref(s), received_ref(0) { }
+				void onEvent(const WorkflowEvent&) override
+				{
+					received_ref++;
+					subject_ref->detach(this);
+				}
+				unsigned received() const { return received_ref; }
+			private:
+				EventSubject* subject_ref;
+				unsigned received_ref;
+		};
+
 		class RecordingConnector : public ExternalConnector
 		{
 			public:
@@ -249,6 +264,45 @@ namespace tividy
 		EXPECT_EQ(late.received()[0].type(), EventType::ItemAssigned);
 	}
 
+	TEST(ObserverPatternTest, ObserverDetachingItselfDuringDeliveryDoesNotBreakDelivery)
+	{
+		EventPublisher publisher;
+		DetachingObserver detacher(&publisher);
+		RecordingObserver after("after");
+		publisher.attach(&detacher);
+		publisher.attach(&after);
+
+		EXPECT_NO_THROW(publisher.notify(makeEvent(EventType::ItemAvailable)));
+		EXPECT_EQ(detacher.received(), 1u);
+		EXPECT_EQ(after.received().size(), 1u);
+		EXPECT_EQ(publisher.observerCount(), 1u);
+
+		publisher.notify(makeEvent(EventType::ItemAssigned));
+		EXPECT_EQ(detacher.received(), 1u);
+		EXPECT_EQ(after.received().size(), 2u);
+	}
+
+	TEST(ObserverPatternTest, IndependentObserversAllReactToSameEvent)
+	{
+		std::vector<ConnectorRequest> requests;
+		ConnectorRegistry registry;
+		registry.registerConnector(std::unique_ptr<ExternalConnector>(new RecordingConnector("notifier", &requests)));
+		AuditLog log;
+		AuditObserver audit(log);
+		NotificationObserver notification(registry);
+		RecordingObserver recorder("recorder");
+
+		EventPublisher publisher;
+		publisher.attach(&audit);
+		publisher.attach(&notification);
+		publisher.attach(&recorder);
+		publisher.notify(makeEvent(EventType::ItemAssigned).byActor("u1").withMessage("assigned"));
+
+		EXPECT_EQ(log.entries().size(), 1u);
+		EXPECT_EQ(requests.size(), 1u);
+		EXPECT_EQ(recorder.received().size(), 1u);
+	}
+
 	TEST(ObserverPatternTest, WorksThroughSubjectInterface)
 	{
 		EventPublisher publisher;
@@ -288,6 +342,26 @@ namespace tividy
 		EXPECT_EQ(first.message, "Verify documents assigned");
 		EXPECT_EQ(log.entries()[1].type, EventType::ItemStarted);
 		EXPECT_EQ(log.entries()[2].type, EventType::ItemSubmitted);
+	}
+
+	TEST(AuditObserverTest, LogIsAppendOnly)
+	{
+		AuditLog log;
+		AuditObserver observer(log);
+		observer.onEvent(makeEvent(EventType::ItemAvailable, "a").withMessage("first"));
+		AuditEntry first = log.entries()[0];
+
+		observer.onEvent(makeEvent(EventType::ItemAssigned, "b").byActor("u1").withMessage("second"));
+		observer.onEvent(makeEvent(EventType::ItemStarted, "c").byActor("u1").withMessage("third"));
+
+		ASSERT_EQ(log.entries().size(), 3u);
+		EXPECT_EQ(log.entries()[0].type, first.type);
+		EXPECT_EQ(log.entries()[0].item_id, first.item_id);
+		EXPECT_EQ(log.entries()[0].actor_id, first.actor_id);
+		EXPECT_EQ(log.entries()[0].message, first.message);
+		EXPECT_EQ(log.entries()[0].when, first.when);
+		EXPECT_EQ(log.entries()[1].message, "second");
+		EXPECT_EQ(log.entries()[2].message, "third");
 	}
 
 	TEST(AuditObserverTest, InstanceEventHasEmptyItemId)
