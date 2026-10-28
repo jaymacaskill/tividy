@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
+Last Modified: 27 October 2026
 */
 
 /**
@@ -28,7 +28,6 @@ Last Modified: 26 October 2026
 #include <utility>
 #include <vector>
 
-#include "engine/core/Errors.h"
 #include "engine/definition/WorkflowDefinition.h"
 #include "engine/items/StageItem.h"
 #include "engine/items/WorkItemVisitor.h"
@@ -241,25 +240,4 @@ std::vector<std::string> tividy::WorkflowDefinition::validationProblems() const
 	}
 
 	return problems;
-}
-
-void tividy::WorkflowDefinition::validate() const
-{
-	const std::vector<std::string> problems = validationProblems();
-	if (problems.empty())
-	{
-		return;
-	}
-
-	std::ostringstream message;
-	for (std::size_t i = 0; i < problems.size(); ++i)
-	{
-		if (i != 0)
-		{
-			message << "; ";
-		}
-		message << problems[i];
-	}
-
-	throw tividy::InvalidDefinitionError(message.str());
 }
