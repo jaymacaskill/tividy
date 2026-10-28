@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 25 October 2026
 */
 
 /**
@@ -72,6 +72,7 @@ namespace tividy
 	class OutcomeTableRouting : public RoutingStrategy
 	{
 		public:
+			OutcomeTableRouting() : has_default(false) { }
 			/** Rule for @p routing_key (an Outcome code such as "DOCS_INVALID", or a kind name such as "Rejected"). */
 			OutcomeTableRouting& addRule(const std::string& routing_key, const std::vector<Id>& activate,
 										 const std::vector<Id>& skip);
