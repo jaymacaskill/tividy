@@ -71,7 +71,6 @@ namespace tividy
 		return nullptr;
 	}
 
-	// --- Delegating Lifecycle Operations ---
 	void TaskItem::publish() { state->publish(*this); }
 	void TaskItem::assign(const Id& participant_id) { state->assign(*this, participant_id); }
 	void TaskItem::start(const Participant& actor) { state->start(*this, actor); }
@@ -162,14 +161,12 @@ namespace tividy
 
 	bool TaskItem::isReversible() const { return !irreversible_performed; }
 
-	// --- Getters ---
 	const Outcome& TaskItem::lastOutcome() const { return last_outcome; }
 	const Id& TaskItem::completedBy() const { return completed_by; }
 	unsigned TaskItem::rejections() const { return rejections_ref; }
 	unsigned TaskItem::failures() const { return failures_ref; }
 	unsigned TaskItem::escalations() const { return escalations_ref; }
 
-	// --- Manual Task ---
 	ManualTask::ManualTask(const WorkItemSpec& spec) : CloneableTask<ManualTask>(spec) {}
 	void ManualTask::performWork(const Participant& actor, Outcome& outcome) { (void)actor; (void)outcome; }
 
