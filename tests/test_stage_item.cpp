@@ -386,6 +386,102 @@ namespace tividy
         EXPECT_EQ(g_log[0], "skip:B:r");
     }
 
+    // ---- skip through nested stages (a nested stage's derived status can read InProgress while everything in it is skippable) ----
+
+    TEST_F(StageItemTest, SkipWorksThroughANestedStageHoldingAnAvailableTask)
+    {
+        StageItem* inner = nest(stage, "N");
+        Leaf* t = leaf(*inner, "T", ItemStatus::Available);
+        ASSERT_EQ(inner->status(), ItemStatus::InProgress);   // rule 5 is the premise of this case
+        EXPECT_NO_THROW(stage.skip("r"));
+        ASSERT_EQ(g_log.size(), 1u);
+        EXPECT_EQ(g_log[0], "skip:T:r");
+        EXPECT_EQ(t->status(), ItemStatus::Skipped);
+        EXPECT_EQ(inner->status(), ItemStatus::Skipped);
+        EXPECT_EQ(stage.status(), ItemStatus::Skipped);
+    }
+
+    TEST_F(StageItemTest, SkipWorksThroughANestedStageMixingSkippedAndCreatedTasks)
+    {
+        StageItem* inner = nest(stage, "N");
+        leaf(*inner, "Done", ItemStatus::Skipped);
+        leaf(*inner, "Todo", ItemStatus::Created);
+        ASSERT_EQ(inner->status(), ItemStatus::InProgress);   // rule 5 again
+        EXPECT_NO_THROW(stage.skip("r"));
+        ASSERT_EQ(g_log.size(), 1u);
+        EXPECT_EQ(g_log[0], "skip:Todo:r");                  // the already-skipped task is left alone
+        EXPECT_EQ(stage.status(), ItemStatus::Skipped);
+    }
+
+    TEST_F(StageItemTest, SkipReachesEveryEligibleTaskAtEveryDepthInOrder)
+    {
+        leaf(stage, "A", ItemStatus::Available);
+        StageItem* n = nest(stage, "N");
+        leaf(*n, "B", ItemStatus::Skipped);
+        StageItem* m = nest(*n, "M");
+        leaf(*m, "C", ItemStatus::Created);
+        leaf(*m, "D", ItemStatus::Available);
+        leaf(stage, "E", ItemStatus::Created);
+        stage.skip("r");
+        std::vector<std::string> expected;
+        expected.push_back("skip:A:r"); expected.push_back("skip:C:r");
+        expected.push_back("skip:D:r"); expected.push_back("skip:E:r");
+        EXPECT_EQ(g_log, expected);
+        EXPECT_EQ(stage.status(), ItemStatus::Skipped);
+    }
+
+    TEST_F(StageItemTest, SkipLeavesAFullySkippedNestedStageUntouched)
+    {
+        leaf(stage, "A");
+        StageItem* inner = nest(stage, "N");
+        leaf(*inner, "B", ItemStatus::Skipped);
+        leaf(*inner, "C", ItemStatus::Skipped);
+        stage.skip("r");
+        ASSERT_EQ(g_log.size(), 1u);
+        EXPECT_EQ(g_log[0], "skip:A:r");
+    }
+
+    TEST_F(StageItemTest, SkipRefusesWhenANestedTaskHasStarted)
+    {
+        const ItemStatus started[] = { ItemStatus::Assigned, ItemStatus::InProgress, ItemStatus::UnderReview,
+                                       ItemStatus::Escalated, ItemStatus::Completed, ItemStatus::Cancelled };
+        for (std::size_t i = 0; i < 6; ++i)
+        {
+            StageItem s(WorkItemSpec("X", "x"));
+            StageItem* inner = nest(s, "N");
+            leaf(*inner, "T", started[i]);
+            EXPECT_THROW(s.skip("r"), InvalidStateError) << toString(started[i]);
+        }
+    }
+
+    TEST_F(StageItemTest, ARefusedSkipLeavesEarlierSiblingsAndNestedTasksUnchanged)
+    {
+        Leaf* a = leaf(stage, "A");
+        StageItem* inner = nest(stage, "N");
+        Leaf* b = leaf(*inner, "B");
+        leaf(*inner, "C", ItemStatus::InProgress);
+        EXPECT_THROW(stage.skip("r"), InvalidStateError);
+        EXPECT_TRUE(g_log.empty());
+        EXPECT_EQ(a->status(), ItemStatus::Created);
+        EXPECT_EQ(b->status(), ItemStatus::Created);
+    }
+
+    TEST_F(StageItemTest, ARefusedSkipNamesTheBlockingTaskSeveralLevelsDown)
+    {
+        StageItem* n1 = nest(stage, "N1");
+        StageItem* n2 = nest(*n1, "N2");
+        leaf(*n2, "T", ItemStatus::Completed);
+        try
+        {
+            stage.skip("r");
+            FAIL() << "skip() should have thrown";
+        }
+        catch (const InvalidStateError& e)
+        {
+            EXPECT_EQ(std::string(e.what()), std::string("Stage S cannot be skipped: T is ") + toString(ItemStatus::Completed));
+        }
+    }
+
     // ---- clone (Prototype) ----
 
     TEST_F(StageItemTest, CloneIsADeepCopyOfTheTemplate)

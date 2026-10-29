@@ -27,6 +27,31 @@ StageItem.cpp
 
 namespace tividy
 {
+	namespace
+	{
+		// The first leaf below item that can no longer be skipped, or null when everything below it can be.
+		// A nested stage's own status is ignored on purpose: it can read InProgress while holding only skippable tasks.
+		WorkItem* firstUnskippable(WorkItem& item)
+		{
+			std::vector<WorkItem*> below = item.children();
+			if (below.empty())
+			{
+				const ItemStatus s = item.status();
+				if (s == ItemStatus::Created || s == ItemStatus::Available || s == ItemStatus::Skipped) return 0;
+
+				return &item;
+			}
+
+			for (std::size_t i = 0; i < below.size(); ++i)
+			{
+				WorkItem* blocker = firstUnskippable(*below[i]);
+				if (blocker != 0) return blocker;
+			}
+
+			return 0;
+		}
+	}
+
 	StageItem::StageItem(const WorkItemSpec& spec) : spec_ref(spec), children_ref() { }
 
 	StageItem::~StageItem() { }
@@ -158,17 +183,14 @@ namespace tividy
 	{
 		for (std::size_t i = 0; i < children_ref.size(); ++i)
 		{
-			const ItemStatus s = children_ref[i]->status();
-			if (s != ItemStatus::Created && s != ItemStatus::Available && s != ItemStatus::Skipped)
-				throw InvalidStateError("Stage " + spec_ref.id() + " cannot be skipped: " + children_ref[i]->spec().id() +
-										" is " + toString(s));
+			const WorkItem* blocker = firstUnskippable(*children_ref[i]);
+			if (blocker != 0)
+				throw InvalidStateError("Stage " + spec_ref.id() + " cannot be skipped: " + blocker->spec().id() +
+				                        " is " + toString(blocker->status()));
 		}
 
 		for (std::size_t i = 0; i < children_ref.size(); ++i)
-		{
-			const ItemStatus s = children_ref[i]->status();
-			if (s == ItemStatus::Created || s == ItemStatus::Available) children_ref[i]->skip(reason);
-		}
+			if (children_ref[i]->status() != ItemStatus::Skipped) children_ref[i]->skip(reason);
 	}
 
 	void StageItem::expire(const std::string&, const std::string&)

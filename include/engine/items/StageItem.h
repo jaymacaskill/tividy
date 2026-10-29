@@ -41,7 +41,7 @@ namespace tividy
 	 *
 	 * ### Lifecycle operations
 	 *  - cancel(reason): cancels every non-terminal child in order (cascade).
-	 *  - skip(reason):   skips every Created/Available child; throws InvalidStateError if any child has started.
+	 *  - skip(reason):   skips every Created/Available child; throws InvalidStateError if any task below it has started (This line has changed).
 	 *  - publish, assign, start, submit, complete, approve, reject, escalate, expire:
 	 *    throw UnsupportedOperationError("a stage is driven by its children").
 	 *  - assignee() is "". createMemento()/restore()/isReversible() use the WorkItem defaults.
