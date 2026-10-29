@@ -23,6 +23,147 @@ static bool contains(const std::vector<std::string>& problems, const std::string
     });
 }
 
+struct DefinitionCoreItemCalls
+{
+	unsigned visits = 0;
+	unsigned destructions = 0;
+};
+
+class DefinitionCoreObservedItem : public ValidationTestWrapper
+{
+	public:
+		DefinitionCoreObservedItem(std::unique_ptr<tividy::WorkItem> item, DefinitionCoreItemCalls& calls)
+			: ValidationTestWrapper(std::move(item)), calls(calls) {}
+
+		~DefinitionCoreObservedItem() override { ++calls.destructions; }
+
+		void accept(tividy::WorkItemVisitor& visitor) const override
+		{
+			++calls.visits;
+			ValidationTestWrapper::accept(visitor);
+		}
+
+	private:
+		DefinitionCoreItemCalls& calls;
+};
+
+TEST(WorkflowDefinitionCore, CopiesMetadataIndependentlyOfTheCaller)
+{
+	std::string name = "Approval process";
+	std::string description = "A reusable definition";
+	auto root = stage();
+	root->add(task(tividy::WorkItemSpec("leaf", "Leaf")));
+	tividy::WorkflowDefinition value(name, 7, description, std::move(root), policies());
+
+	name.assign("Changed name");
+	description.clear();
+	EXPECT_EQ("Approval process", value.name());
+	EXPECT_EQ(7u, value.version());
+	EXPECT_EQ("A reusable definition", value.description());
+	EXPECT_NO_THROW(value.validate());
+	EXPECT_EQ("Approval process", value.name());
+	EXPECT_EQ(7u, value.version());
+	EXPECT_EQ("A reusable definition", value.description());
+}
+
+TEST(WorkflowDefinitionCore, CopiesPolicyContainersAndSharesTheirImmutableStrategies)
+{
+	auto selected = policies();
+	selected.routing["leaf"].reset(new ValidationTestRouting);
+	selected.escalation.reset(new tividy::RoleEscalationHandler("manager", 1));
+	selected.cancel_signals.insert("STOP");
+	const auto assignment = selected.assignment;
+	const auto routing = selected.routing.at("leaf");
+	const auto escalation = selected.escalation;
+	auto root = stage();
+	root->add(task(tividy::WorkItemSpec("leaf", "Leaf")));
+	auto value = definition(std::move(root), selected);
+
+	selected.assignment.reset();
+	selected.routing.clear();
+	selected.escalation.reset();
+	selected.cancel_signals.clear();
+	selected.cancel_signals.insert("DIFFERENT");
+
+	const auto& stored = value->policies();
+	EXPECT_EQ(assignment, stored.assignment);
+	ASSERT_EQ(1u, stored.routing.size());
+	EXPECT_EQ(routing, stored.routing.at("leaf"));
+	EXPECT_EQ(escalation, stored.escalation);
+	EXPECT_EQ(std::set<std::string>({"STOP"}), stored.cancel_signals);
+	EXPECT_NO_THROW(value->validate());
+}
+
+TEST(WorkflowDefinitionCore, RetainsPolicyObjectsUntilTheDefinitionIsDestroyed)
+{
+	std::weak_ptr<const tividy::AssignmentStrategy> assignment;
+	std::weak_ptr<const tividy::RoutingStrategy> routing;
+	std::weak_ptr<const tividy::EscalationHandler> escalation;
+	std::unique_ptr<tividy::WorkflowDefinition> value;
+	{
+		auto selected = policies();
+		selected.routing["leaf"].reset(new ValidationTestRouting);
+		selected.escalation.reset(new tividy::RoleEscalationHandler("manager", 1));
+		assignment = selected.assignment;
+		routing = selected.routing.at("leaf");
+		escalation = selected.escalation;
+		auto root = stage();
+		root->add(task(tividy::WorkItemSpec("leaf", "Leaf")));
+		value = definition(std::move(root), selected);
+	}
+
+	EXPECT_FALSE(assignment.expired());
+	EXPECT_FALSE(routing.expired());
+	EXPECT_FALSE(escalation.expired());
+	EXPECT_NO_THROW(value->validate());
+	value.reset();
+	EXPECT_TRUE(assignment.expired());
+	EXPECT_TRUE(routing.expired());
+	EXPECT_TRUE(escalation.expired());
+}
+
+TEST(WorkflowDefinitionCore, LeavesValidationExplicitAndPreservesSuppliedPolicies)
+{
+	DefinitionCoreItemCalls calls;
+	std::unique_ptr<tividy::WorkItem> root(new DefinitionCoreObservedItem(stage(), calls));
+	tividy::DefinitionPolicies missing_assignment;
+	std::unique_ptr<tividy::WorkflowDefinition> value;
+	EXPECT_NO_THROW(value.reset(new tividy::WorkflowDefinition(
+		"Invalid until checked", 1, "An empty stage", std::move(root), missing_assignment)));
+	ASSERT_TRUE(value);
+	EXPECT_EQ(0u, calls.visits);
+	EXPECT_FALSE(value->policies().assignment);
+	EXPECT_THROW(value->validate(), tividy::InvalidDefinitionError);
+	EXPECT_EQ(1u, calls.visits);
+	EXPECT_EQ("Invalid until checked", value->name());
+	EXPECT_EQ("An empty stage", value->description());
+}
+
+TEST(WorkflowDefinitionCore, OwnsAndDestroysTheEntireTemplateWithoutCloningOrExecutingIt)
+{
+	DefinitionCoreItemCalls root_calls;
+	DefinitionCoreItemCalls child_calls;
+	std::unique_ptr<tividy::WorkItem> child(new DefinitionCoreObservedItem(
+		task(tividy::WorkItemSpec("leaf", "Leaf")), child_calls));
+	tividy::WorkItem* child_address = child.get();
+	auto tree = stage();
+	tree->add(std::move(child));
+	std::unique_ptr<tividy::WorkItem> root(new DefinitionCoreObservedItem(std::move(tree), root_calls));
+	tividy::WorkItem* root_address = root.get();
+	auto value = definition(std::move(root));
+
+	EXPECT_FALSE(root);
+	EXPECT_EQ(root_address, root_address->find("root"));
+	EXPECT_EQ(child_address, root_address->find("leaf"));
+	EXPECT_EQ(0u, root_calls.visits);
+	EXPECT_EQ(0u, child_calls.visits);
+	EXPECT_EQ(0u, root_calls.destructions);
+	EXPECT_EQ(0u, child_calls.destructions);
+	value.reset();
+	EXPECT_EQ(1u, root_calls.destructions);
+	EXPECT_EQ(1u, child_calls.destructions);
+}
+
 TEST(WorkflowDefinitionValidation, ValidNestedDefinitionsSupportForwardAndRepeatedDependencies) {
 	auto root = stage();
 	root->add(task(tividy::WorkItemSpec("later", "Later").dependsOn("first").dependsOn("first")));

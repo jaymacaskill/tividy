@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 23 October 2026
+Last Modified: 26 October 2026
 */
 
 /**
@@ -135,7 +135,7 @@ namespace tividy
 				unsigned counter;
 		};
 
-		/** Adaptee: simulated card-scheme dispute system. fileChargeback() returns "CASE-" + transactionId; throws std::runtime_error("scheme unavailable") while failNextCalls(n) is active. */
+		/** Adaptee: simulated card-scheme dispute system. fileChargeback() returns "CASE-" + transaction_id; throws std::runtime_error("scheme unavailable") while failNextCalls(n) is active. */
 		class CardSchemeVendor
 		{
 			public:
