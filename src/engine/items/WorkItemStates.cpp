@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
+Last Modified: 28 October 2026
 */
 
 #ifndef TIVIDY_ITEMS_WORKITEMSTATE_CPP
@@ -22,78 +22,83 @@ Last Modified: 27 October 2026
 
 namespace tividy
 {
-    const Participant& system_actor()
+    namespace 
     {
-        static const Participant p("system", "System", std::set<std::string>());
-        return p;
-    }
-    /*
-    void WorkItemState::publish(TaskItem& item) const
+        const Participant& system_actor()
+        {
+            static const Participant p("system", "System", std::set<std::string>());
+            return p;
+        }
+    } // anonymous namespace
+    
+
+    void WorkItemState::publish(TaskItem& /*item*/) const
     {
-        std::string msg = "publish() is not allowed while " , status();
+        std::string msg = "publish() is not allowed while " + toString(status());
         throw InvalidStateError(msg);
     }
 
-    void WorkItemState::assign(TaskItem& item, const Id& participant_id) const
+    void WorkItemState::assign(TaskItem& /*item*/, const Id& /*participant_id*/) const
     {
-        std::string msg = "assign() is not allowed while " , status();
+        std::string msg = "assign() is not allowed while " + toString(status());
         throw InvalidStateError(msg);       
     }
 
-    void WorkItemState::start(TaskItem& item, const Participant& actor) const
+    void WorkItemState::start(TaskItem& /*item*/, const Participant& /*actor*/) const
     {
-        std::string msg = "start() is not allowed while " , status();
+        std::string msg = "start() is not allowed while " + toString(status());
         throw InvalidStateError(msg); 
     }
 
-    void WorkItemState::submit(TaskItem& item, const Participant& actor, const Outcome& outcome) const
+    void WorkItemState::submit(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
     {
-        std::string msg = "submit() is not allowed while " , status();
+        std::string msg = "submit() is not allowed while " + toString(status());
         throw InvalidStateError(msg);        
     }
 
-    void WorkItemState::complete(TaskItem& item, const Participant& actor, const Outcome& outcome) const
+    void WorkItemState::complete(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
     {
-        std::string msg = "complete() is not allowed while " , status();
+        std::string msg = "complete() is not allowed while " + toString(status());
         throw InvalidStateError(msg);        
     }
 
-    void WorkItemState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
+    void WorkItemState::approve(TaskItem& /*item*/, const Participant& /*reviewer*/, const Outcome& /*outcome*/) const
     {
-        std::string msg = "approve() is not allowed while " , status();
+        std::string msg = "approve() is not allowed while " + toString(status());
         throw InvalidStateError(msg);         
     }
 
-    void WorkItemState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
+    void WorkItemState::reject(TaskItem& /*item*/, const Participant& /*reviewer*/, const std::string& /*reason*/) const
     {
-        std::string msg = "reject() is not allowed while " , status();
+        std::string msg = "reject() is not allowed while " + toString(status());
         throw InvalidStateError(msg);    
     }
 
-    void WorkItemState::escalate(TaskItem& item, const std::string& reason) const
+    void WorkItemState::escalate(TaskItem& /*item*/, const std::string& /*reason*/) const
     {
-        std::string msg = "escalate() is not allowed while " , status();
+        std::string msg = "escalate() is not allowed while " + toString(status());
         throw InvalidStateError(msg);   
     }
 
-    void WorkItemState::cancel(TaskItem& item, const std::string& reason) const
+    void WorkItemState::cancel(TaskItem& /*item*/, const std::string& /*reason*/) const
     {
-        std::string msg = "cancel() is not allowed while " , status();
+        std::string msg = "cancel() is not allowed while " + toString(status());
         throw InvalidStateError(msg);   
     }
 
-    void WorkItemState::skip(TaskItem& item, const std::string& reason) const
+    void WorkItemState::skip(TaskItem& /*item*/, const std::string& /*reason*/) const
     {
-        std::string msg = "skip() is not allowed while " , status();
+        std::string msg = "skip() is not allowed while " + toString(status());
         throw InvalidStateError(msg);   
     }
 
-    void WorkItemState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
+    void WorkItemState::expire(TaskItem& /*item*/, const std::string& /*outcome_code*/, const std::string& /*reason*/) const
     {
-        std::string msg = "expire() is not allowed while " , status();
+        std::string msg = "expire() is not allowed while " + toString(status());
         throw InvalidStateError(msg);   
     }
-    */
+    
+    WorkItemState::~WorkItemState() = default;
 
 
     //CreatedState implementation
@@ -233,8 +238,16 @@ namespace tividy
             throw PermissionDeniedError("complete() is only allowed by the assigned participant.");
         }
 
+        Outcome edit = outcome;
+
+        if (!runWork(item, actor, edit))
+        {
+            return; // left in InProgress
+        }
+
+        recordResult(item, actor, edit);
         moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, actor.id(), outcome, "Item completed by assigned participant.");
+        emit(item, EventType::ItemCompleted, actor.id(), edit, "Item completed by assigned participant.");
     }
 
     void InProgressState::submit(TaskItem& item, const Participant& actor, const Outcome& outcome) const
@@ -290,6 +303,7 @@ namespace tividy
 
     void UnderReviewState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
     {
+        recordResult(item, reviewer, outcome);
         moveTo(item, CompletedState::instance());
         emit(item, EventType::ItemCompleted, reviewer.id(), outcome, "Item approved and completed by reviewer.");
     }
@@ -352,8 +366,14 @@ namespace tividy
     void EscalatedState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
     {
         Outcome edit = outcome;
-        runWork(item, reviewer, edit);
+        
+        if (!runWork(item, reviewer, edit))
+        {
+            return; // left in Escalated
+        }
+        recordResult(item, reviewer, edit);
         moveTo(item, CompletedState::instance());
+        emit(item, EventType::ItemCompleted, reviewer.id(), edit, "Item approved and completed by escalation approver.");
     }
 
     void EscalatedState::cancel(TaskItem& item, const std::string& reason) const

@@ -8,11 +8,11 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
+Last Modified: 28 October 2026
 */
 
-#ifndef TIVIDY_ITEMS_WORKITEMSTATE_CPP
-#define TIVIDY_ITEMS_WORKITEMSTATE_CPP
+#ifndef TIVIDY_ITEMS_WORKITEMSTATEHELPERS_CPP
+#define TIVIDY_ITEMS_WORKITEMSTATEHELPERS_CPP
 
 #include "engine/items/WorkItemState.h"
 #include "engine/items/TaskItem.h"
@@ -31,10 +31,12 @@ namespace tividy
         item.state = &next;
     }
 
-    void WorkItemState::emit(TaskItem& item, EventType type, const Id& /*actor_id*/, const Outcome& /*outcome*/, 
-        const std::string& /*message*/, unsigned /*count*/)
+    void WorkItemState::emit(TaskItem& item, EventType type, const Id& actor_id, const Outcome& outcome, 
+        const std::string& message, unsigned count)
     {
-        item.context().events().notify(WorkflowEvent(type, item.context().instanceId(), item.spec().id(), item.context().clock().now()));
+        WorkflowEvent event(type, item.context().instanceId(), item.spec().id(), item.context().clock().now());
+        event.byActor(actor_id.empty() ? "system" : actor_id).withOutcome(outcome).withMessage(message).withCount(count);
+        item.context().events().notify(event);
     }
 
     void WorkItemState::setAssignee(TaskItem& item, const Id& participant_id)
@@ -48,17 +50,25 @@ namespace tividy
 
     bool WorkItemState::runWork(TaskItem& item, const Participant& actor, Outcome& outcome)
     {
-        item.validateOutcome(outcome);
+        item.validateOutcome(outcome); //may throw ValidationError, propaagtes
         try
         {
             item.performWork(actor, outcome);
         }
-        catch(const ExternalFailure& e)
+        catch(const ExternalFailure& f)
         {
-            ++item.failures_ref;
-            return false;
+            unsigned failures = ++item.failures_ref;
+            Outcome failed = Outcome::failed(f.retryable() ? "RETRYABLE" : "PERMANENT", f.what());
+            emit(item, EventType::ItemFailed, actor.id(), failed, f.what(), failures);
+            return false;    // item stays INProgress, FlowController retries/escalates
         }
         
+        if (item.performsIrreversibleWork())
+        {
+            item.context().markIrreversible();
+            item.irreversible_performed = true;
+        }
+
         item.onCompleted(outcome);
         return true;
         
@@ -96,4 +106,4 @@ namespace tividy
     }
 }
 
-#endif //TIVIDY_ITEMS_WORKITEMSTATE_CPP
+#endif //TIVIDY_ITEMS_WORKITEMSTATEHELPERS_CPP
