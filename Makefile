@@ -49,6 +49,21 @@ STATE_DEFAULT_TEST_SOURCES := tests/test_work_item_state_defaults.cpp \
                               src/engine/core/Participant.cpp
 STATE_DEFAULT_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(STATE_DEFAULT_TEST_SOURCES))
 
+# Task-work tests isolate pending task/context/state collaborators from the archive.
+TASK_WORK_TEST_SOURCES := tests/test_task_item_work.cpp \
+                          src/engine/items/TaskItemWork.cpp \
+                          src/engine/items/WorkItemState.cpp \
+                          src/engine/items/WorkItemSpec.cpp \
+                          src/engine/core/Types.cpp \
+                          src/engine/core/Outcome.cpp \
+                          src/engine/core/Clock.cpp \
+                          src/engine/core/Participant.cpp \
+                          src/engine/core/WorkflowData.cpp \
+                          src/engine/events/WorkflowEvent.cpp \
+                          src/engine/events/Observer.cpp \
+                          src/engine/connectors/ExternalConnector.cpp
+TASK_WORK_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(TASK_WORK_TEST_SOURCES))
+
 GTEST_LIBS := -lgtest -lgtest_main -pthread
 
 # --- Valgrind ---
@@ -92,6 +107,10 @@ $(BUILD_DIR)/tests/test_workflow_definition_validation: $(VALIDATION_TEST_OBJECT
 $(BUILD_DIR)/tests/test_work_item_state_defaults: $(STATE_DEFAULT_TEST_OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $(STATE_DEFAULT_TEST_OBJECTS) $(GTEST_LIBS)
+
+$(BUILD_DIR)/tests/test_task_item_work: $(TASK_WORK_TEST_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(TASK_WORK_TEST_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
