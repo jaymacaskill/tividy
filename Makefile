@@ -7,7 +7,7 @@
 # Thabo Ngwabi (24742512)
 
 # COS 214 (Software Modelling) TIVIDY
-# Last Modified: 26 October 2026
+# Last Modified: 27 October 2026
 
 CXX      := g++
 CXXFLAGS := -std=c++11 -Wall -Wextra -g -Iinclude -MMD -MP
@@ -27,14 +27,16 @@ TEST_OBJECTS   := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(TEST_SOURCES))
 
 TEST_BINARIES  := $(patsubst %.cpp,$(BUILD_DIR)/%,$(TEST_SOURCES))
 
-# Structural validator fixtures belong only to this unit-test executable.
-# Explicit object linkage keeps them separate from libtividy.a as real item
-# implementations are added in later phases.
+# Definition tests use the real core and validator with structural item fixtures.
+# Explicit object linkage keeps those fixtures separate from libtividy.a as real
+# item implementations are added in later phases.
 VALIDATION_TEST_SOURCES := tests/test_workflow_definition_validation.cpp \
+                           src/engine/definition/WorkflowDefinition.cpp \
                            src/engine/definition/WorkflowDefinitionValidation.cpp \
                            src/engine/items/WorkItemSpec.cpp \
                            src/engine/core/Outcome.cpp \
-                           src/engine/core/Types.cpp
+                           src/engine/core/Types.cpp \
+                           src/engine/policies/EscalationHandler.cpp
 VALIDATION_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(VALIDATION_TEST_SOURCES))
 
 GTEST_LIBS := -lgtest -lgtest_main -pthread
