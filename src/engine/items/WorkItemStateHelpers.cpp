@@ -50,28 +50,9 @@ namespace tividy
 
     bool WorkItemState::runWork(TaskItem& item, const Participant& actor, Outcome& outcome)
     {
-        item.validateOutcome(outcome); //may throw ValidationError, propaagtes
-        try
-        {
-            item.performWork(actor, outcome);
-        }
-        catch(const ExternalFailure& f)
-        {
-            unsigned failures = ++item.failures_ref;
-            Outcome failed = Outcome::failed(f.retryable() ? "RETRYABLE" : "PERMANENT", f.what());
-            emit(item, EventType::ItemFailed, actor.id(), failed, f.what(), failures);
-            return false;    // item stays INProgress, FlowController retries/escalates
-        }
-        
-        if (item.performsIrreversibleWork())
-        {
-            item.context().markIrreversible();
-            item.irreversible_performed = true;
-        }
-
-        item.onCompleted(outcome);
-        return true;
-        
+        // executeWork() is the Template Method (TaskItemWork.cpp): validate, perform, publish ItemFailed on a technical failure,
+        // mark irreversible work, onCompleted. The states only call it, so that logic lives in exactly one place.
+        return item.executeWork(actor, outcome);
     }
 
     void WorkItemState::recordResult(TaskItem& item, const Participant& actor, const Outcome& outcome)

@@ -11,8 +11,8 @@ COS 214 (Software Modelling) TIVIDY
 Last Modified: 28 October 2026
 */
 
-#ifndef TIVIDY_ITEMS_WORKITEMSTATE_CPP
-#define TIVIDY_ITEMS_WORKITEMSTATE_CPP
+#ifndef TIVIDY_ITEMS_WORKITEMSTATES_CPP
+#define TIVIDY_ITEMS_WORKITEMSTATES_CP
 
 #include "engine/items/WorkItemState.h"
 #include "engine/items/TaskItem.h"
@@ -124,7 +124,7 @@ namespace tividy
     void AssignedState::escalate(TaskItem& item, const std::string& reason) const
     {
         moveTo(item, EscalatedState::instance());
-        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.");
+        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
     }
 
     void AssignedState::cancel(TaskItem& item, const std::string& reason) const
@@ -191,15 +191,23 @@ namespace tividy
         {
             throw PermissionDeniedError("submit() is only allowed by the assigned participant.");
         }
-
+ 
+        Outcome edit = outcome;
+ 
+        if (!runWork(item, actor, edit))
+        {
+            return; // left in InProgress
+        }
+ 
+        recordResult(item, actor, edit);
         moveTo(item, UnderReviewState::instance());
-        emit(item, EventType::ItemSubmitted, actor.id(), outcome, "Item submitted for review by assigned participant.");
+        emit(item, EventType::ItemSubmitted, actor.id(), edit, "Item submitted for review by assigned participant.");
     }
 
     void InProgressState::escalate(TaskItem& item, const std::string& reason) const
     {
         moveTo(item, EscalatedState::instance());
-        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.");
+        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
     }
 
     void InProgressState::cancel(TaskItem& item, const std::string& reason) const
@@ -233,9 +241,17 @@ namespace tividy
 
     void UnderReviewState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
     {
-        recordResult(item, reviewer, outcome);
+
+        // routing branches on the outcome code, so a reviewer who gives no code of their own approves the code that was submitted
+        Outcome decided = outcome;
+        if (decided.code() == "")
+        {
+            decided = item.lastOutcome();
+        }
+ 
+        recordResult(item, reviewer, decided);
         moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, reviewer.id(), outcome, "Item approved and completed by reviewer.");
+        emit(item, EventType::ItemCompleted, reviewer.id(), decided, "Item approved and completed by reviewer.");
     }
 
     void UnderReviewState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
@@ -256,7 +272,7 @@ namespace tividy
     void UnderReviewState::escalate(TaskItem& item, const std::string& reason) const
     {
         moveTo(item, EscalatedState::instance());
-        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.");
+        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
     }
     
     void UnderReviewState::cancel(TaskItem& item, const std::string& reason) const
@@ -364,4 +380,4 @@ namespace tividy
 
 }
 
-#endif // TIVIDY_ITEMS_WORKITEMSTATE_CPP
+#endif // TIVIDY_ITEMS_WORKITEMSTATES_CPP
