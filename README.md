@@ -169,12 +169,46 @@ Full participant mappings and justifications: [Design patterns (PDF)](report/sec
 
 Every diagram is an SVG you can open directly, with its editable **Visual Paradigm** source linked underneath. All of them are drawn to match the final code and agree with each other. The full set is also in [`docs/img/final/`](docs/img/final/), and the Visual Paradigm files are located in [`docs/vpp`](docs/vpp).
 
-### Class diagram
+### Class diagrams
+
+There are four class diagrams: one for the industry-neutral engine, then one for each industry pack. Every diagram has its own legend, and colour shows which design pattern a class belongs to. In the industry diagrams, a **solid border** is that industry's own class and a **dashed border** is an engine class shown for context. All four live in one Visual Paradigm project: [`class_diagram.vpp`](docs/vpp/class_diagram.vpp).
+
+#### The engine
 
 <p align="center">
-  <a href="docs/img/final/class-diagram.svg"><img src="docs/img/final/class-diagram.svg" height="420" alt="TIVIDY class diagram"/></a>
-  <br/><sub>Complete system class diagram, colour-coded by pattern category</sub>
-  <br/><a href="docs/vpp/class_diagram.vpp">Available in Visual Paradigm format</a>
+  <a href="docs/img/final/class-diagram.svg"><img src="docs/img/final/class-diagram.svg" width="900" alt="TIVIDY engine class diagram"/></a>
+  <br/><sub>The whole engine, with one package per folder. Click to open at full size.</sub>
+</p>
+
+#### The industry packs
+
+Each pack is shown under the logo of the fictional client it was built for.
+
+##### 🏦 Banking: `transaction-dispute`
+
+<p align="center">
+  <img src="docs/assets/clients/hudson_bank_logo.png" height="90" alt="Hudson Bank logo"/>
+  <br/>
+  <a href="docs/img/final/banking-class-diagram.svg"><img src="docs/img/final/banking-class-diagram.svg" width="900" alt="Banking pack class diagram"/></a>
+  <br/><sub>Hudson Bank: <code>BankingPack</code>, <code>DisputeDirector</code>, the dispute tasks and the core-banking and card-scheme adapters</sub>
+</p>
+
+##### 📡 Telecom: `service-activation`
+
+<p align="center">
+  <img src="docs/assets/clients/warped_logo.png" height="90" alt="Warped logo"/>
+  <br/>
+  <a href="docs/img/final/telecom-class-diagram.svg"><img src="docs/img/final/telecom-class-diagram.svg" width="900" alt="Telecom pack class diagram"/></a>
+  <br/><sub>Warped: <code>TelecomPack</code>, <code>ServiceActivationDirector</code>, the credit-check and provisioning tasks, the regional technician strategy and the vendor adapters</sub>
+</p>
+
+##### 📄 Demo: `document-approval`
+
+<p align="center">
+  <img src="docs/assets/tividy_logo.jpg" height="90" alt="TIVIDY logo"/>
+  <br/>
+  <a href="docs/img/final/demo-class-diagram.svg"><img src="docs/img/final/demo-class-diagram.svg" width="900" alt="Demo pack class diagram"/></a>
+  <br/><sub>The smallest pack: <code>DemoPack</code> and <code>DocumentApprovalDirector</code> use only engine classes</sub>
 </p>
 
 ### State diagram
