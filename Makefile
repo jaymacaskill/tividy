@@ -7,7 +7,7 @@
 # Thabo Ngwabi (24742512)
 
 # COS 214 (Software Modelling) TIVIDY
-# Last Modified: 27 October 2026
+# Last Modified: 29 October 2026
 
 CXX      := g++
 CXXFLAGS := -std=c++11 -Wall -Wextra -g -Iinclude -MMD -MP
@@ -38,6 +38,16 @@ VALIDATION_TEST_SOURCES := tests/test_workflow_definition_validation.cpp \
                            src/engine/core/Types.cpp \
                            src/engine/policies/EscalationHandler.cpp
 VALIDATION_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(VALIDATION_TEST_SOURCES))
+
+# State defaults use structural task fixtures while the state machine is assembled.
+# Explicit linkage keeps these fixtures separate from the production archive.
+STATE_DEFAULT_TEST_SOURCES := tests/test_work_item_state_defaults.cpp \
+                              src/engine/items/WorkItemState.cpp \
+                              src/engine/items/WorkItemSpec.cpp \
+                              src/engine/core/Outcome.cpp \
+                              src/engine/core/Types.cpp \
+                              src/engine/core/Participant.cpp
+STATE_DEFAULT_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(STATE_DEFAULT_TEST_SOURCES))
 
 GTEST_LIBS := -lgtest -lgtest_main -pthread
 
@@ -78,6 +88,10 @@ $(BUILD_DIR)/%.o: %.cpp
 $(BUILD_DIR)/tests/test_workflow_definition_validation: $(VALIDATION_TEST_OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $(VALIDATION_TEST_OBJECTS) $(GTEST_LIBS)
+
+$(BUILD_DIR)/tests/test_work_item_state_defaults: $(STATE_DEFAULT_TEST_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(STATE_DEFAULT_TEST_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
