@@ -24,7 +24,7 @@ from PIL import Image, ImageFilter
 LOGOS = [
     # (function name in C++, source image, display width in character cells)
     # the last value thickens the mark: TIVIDY's diamond is drawn with hairlines that would fade to nothing when shrunk to terminal size
-    ("hudson", "docs/assets/clients/hudson_logo.png", 76, False),
+    ("hudson", "docs/assets/clients/hudson_bank_logo.png", 76, False),
     ("warped", "docs/assets/clients/warped_logo.png", 64, False),
     ("tividy", "docs/assets/tividy_logo.jpg", 76, True),
 ]
