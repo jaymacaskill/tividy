@@ -7,7 +7,7 @@
 # Thabo Ngwabi (24742512)
 
 # COS 214 (Software Modelling) TIVIDY
-# Last Modified: 27 October 2026
+# Last Modified: 29 October 2026
 
 CXX      := g++
 CXXFLAGS := -std=c++11 -Wall -Wextra -g -Iinclude -MMD -MP
@@ -38,6 +38,25 @@ VALIDATION_TEST_SOURCES := tests/test_workflow_definition_validation.cpp \
                            src/engine/core/Types.cpp \
                            src/engine/policies/EscalationHandler.cpp
 VALIDATION_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(VALIDATION_TEST_SOURCES))
+
+# Snapshot tests use the real snapshot methods with isolated runtime/item fixtures.
+# Explicit linkage avoids duplicate definitions when the runtime pieces are merged.
+SNAPSHOT_TEST_SOURCES := tests/test_workflow_instance_snapshot.cpp \
+                         src/engine/runtime/WorkflowInstanceSnapshot.cpp \
+                         src/engine/items/WorkItemIterator.cpp \
+                         src/engine/items/WorkItemSpec.cpp \
+                         src/engine/core/Types.cpp \
+                         src/engine/core/Outcome.cpp \
+                         src/engine/core/Clock.cpp \
+                         src/engine/core/Participant.cpp \
+                         src/engine/core/WorkflowData.cpp \
+                         src/engine/events/Observer.cpp \
+                         src/engine/events/WorkflowEvent.cpp \
+                         src/engine/connectors/ExternalConnector.cpp \
+                         src/engine/commands/Command.cpp \
+                         src/engine/runtime/Observers.cpp \
+                         src/engine/policies/AssignmentStrategy.cpp
+SNAPSHOT_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SNAPSHOT_TEST_SOURCES))
 
 GTEST_LIBS := -lgtest -lgtest_main -pthread
 
@@ -78,6 +97,10 @@ $(BUILD_DIR)/%.o: %.cpp
 $(BUILD_DIR)/tests/test_workflow_definition_validation: $(VALIDATION_TEST_OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $(VALIDATION_TEST_OBJECTS) $(GTEST_LIBS)
+
+$(BUILD_DIR)/tests/test_workflow_instance_snapshot: $(SNAPSHOT_TEST_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(SNAPSHOT_TEST_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
