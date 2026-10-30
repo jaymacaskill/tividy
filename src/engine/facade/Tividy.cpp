@@ -66,8 +66,9 @@ namespace tividy
 
 	/** @brief Installs a pack and registers the products it provides.
 	 * @details Checks for a null or duplicate pack, stores the pack, then adds its participants,
-	 * connectors, built workflow definition and client profile. The operation is not transactional:
-	 * if a later step throws, earlier changes remain applied.
+	 * connectors, built workflow definition and client profile. The operation leaves nothing installed
+	 * if a failure occurs while building, but a failure while adding participants or connectors
+	 * may still leave those behind
 	 * @throws EngineError if @p pack is null or its key is already installed. */
 
 	void Tividy::installPack(std::unique_ptr<IndustryPack> pack)
@@ -81,20 +82,24 @@ namespace tividy
 			throw EngineError("pack already installed: " + key);
 
 		IndustryPack *installed = pack.get();
-		packs.emplace(key, std::move(pack));
 
+		// adjusted to make it such that the most likely to throw happen first
+		StandardWorkflowBuilder builder;
+		auto director = installed->createDirector();
+		auto definition = director->build(builder);
+	
 		for (const auto &participant : installed->createParticipants())
 			directory.add(participant);
-
+	
 		auto new_connectors = installed->createConnectors();
 		for (auto &connector : new_connectors)
 			connectors_ref.registerConnector(std::move(connector));
-
-		StandardWorkflowBuilder builder;
-		auto director = installed->createDirector();
-		library.add(key, director->build(builder));
-
+	
+		library.add(key, std::move(definition));
 		profiles[key] = installed->createProfile();
+	
+		packs.emplace(key, std::move(pack)); // and a fully installed pack only is recorded
+		// 
 	}
 
 	/** @brief Creates, records and starts a workflow instance, then returns its generated id.
