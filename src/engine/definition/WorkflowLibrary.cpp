@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
+Last Modified: 30 October 2026
 
 WorkflowLibrary.cpp
 */
@@ -44,7 +44,7 @@ namespace tividy
     
         if (!entries.insert(std::make_pair(name, std::move(newEntry))).second)
         {
-            throw InvalidDefinitionError("Name already exists");
+            throw InvalidDefinitionError("Workflow " + name + " already exists");
         }
     }
     
@@ -77,7 +77,7 @@ namespace tividy
     {
         std::vector<std::string> list;
 
-        for (auto entry : entries)
+        for (const auto& entry : entries)
         {
             list.push_back(entry.first);
         }
