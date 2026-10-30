@@ -83,7 +83,6 @@ namespace tividy
 	void TaskItem::skip(const std::string& reason) { state->skip(*this, reason); }
 	void TaskItem::expire(const std::string& outcome_code, const std::string& reason) { state->expire(*this, outcome_code, reason); }
 
-	// --- Structural & Visitor ---
 	void TaskItem::accept(WorkItemVisitor& visitor) const 
 	{ 
 		visitor.visitTask(*this); 
@@ -111,55 +110,6 @@ namespace tividy
 		}
 		return *context_ref;
 	}
-
-	std::unique_ptr<WorkItemMemento> TaskItem::createMemento() const 
-	{ 
-		std::unique_ptr<WorkItemMemento> mem(new WorkItemMemento());
-		mem->status = state->status();
-		mem->assignee = assignee_ref;
-		mem->assigned_at = assigned_at;
-		mem->rejections = rejections_ref;
-		mem->failures = failures_ref;
-		mem->escalations = escalations_ref;
-		
-		// Unpack the Outcome object into primitive types for the memento
-		mem->last_outcome_kind = last_outcome.kind();
-		mem->last_outcome_code = last_outcome.code();
-		mem->last_outcome_note = last_outcome.note();
-		
-		mem->completed_by = completed_by;
-		return mem;
-	}
-
-	void TaskItem::restore(const WorkItemMemento& memento) 
-	{
-		// 1. Map the enum status back to the singleton state pointer
-		switch (memento.status)
-		{
-			case ItemStatus::Created:     state = &CreatedState::instance(); break;
-			case ItemStatus::Available:   state = &AvailableState::instance(); break;
-			case ItemStatus::Assigned:    state = &AssignedState::instance(); break;
-			case ItemStatus::InProgress:  state = &InProgressState::instance(); break;
-			case ItemStatus::UnderReview: state = &UnderReviewState::instance(); break;
-			case ItemStatus::Escalated:   state = &EscalatedState::instance(); break;
-			case ItemStatus::Completed:   state = &CompletedState::instance(); break;
-			case ItemStatus::Cancelled:   state = &CancelledState::instance(); break;
-			case ItemStatus::Skipped:     state = &SkippedState::instance(); break;
-		}
-
-		// 2. Restore the rest of the variables
-		assignee_ref = memento.assignee;
-		assigned_at = memento.assigned_at;
-		rejections_ref = memento.rejections;
-		failures_ref = memento.failures;
-		escalations_ref = memento.escalations;
-		completed_by = memento.completed_by;
-		
-		// 3. Rebuild the Outcome object from primitive types
-		last_outcome = Outcome(memento.last_outcome_kind, memento.last_outcome_code, memento.last_outcome_note);
-	}
-
-	bool TaskItem::isReversible() const { return !irreversible_performed; }
 
 	const Outcome& TaskItem::lastOutcome() const { return last_outcome; }
 	const Id& TaskItem::completedBy() const { return completed_by; }
