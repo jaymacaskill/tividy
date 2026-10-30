@@ -1,3 +1,15 @@
+/*
+Aidan du Bruyn (25040104)
+Connor Human (22752154)
+Ishmael Ngwasheng (24642542)
+Jay Macaskill (25198387)
+Keval Govind (24904407)
+Ruan van Tonder (25284607)
+Thabo Ngwabi (24742512)
+
+COS 214 (Software Modelling) TIVIDY
+Last Modified: 30 October 2026
+*/
 
 /**
  * @file MacroCommand.cpp
@@ -190,7 +202,16 @@ namespace tividy
 			" step(s)]";
 
 		for (const auto &child : children)
-			result += "\n  " + child->describe();
+		{
+			std::string text = child->describe();
+			std::string indented;
+			for (std::size_t i = 0; i < text.size(); ++i)
+			{
+				indented += text[i];
+				if (text[i] == '\n') indented += "  ";
+			}
+			result += "\n  " + indented;
+		}
 
 		return result;
 	}
