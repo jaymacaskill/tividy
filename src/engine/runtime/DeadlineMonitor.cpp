@@ -56,10 +56,10 @@ namespace tividy
                 continue;
             }
 
-            // Publish DeadlineMissed event and remember the id.
-            instance.events().notify(WorkflowEvent(EventType::DeadlineMissed, instance.id(), id, now)
-										 .byActor("system").withMessage("deadline passed"));
+            // remember the id before publishing, so a reaction that triggers another sweep cannot report this lapse twice
             reported.insert(id);
+			instance.events().notify(WorkflowEvent(EventType::DeadlineMissed, instance.id(), id, now)
+							 .byActor("system").withMessage("deadline passed"));
             ++published;
 
         }
