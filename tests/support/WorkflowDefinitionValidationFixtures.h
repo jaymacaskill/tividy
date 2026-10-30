@@ -8,17 +8,18 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
+Last Modified: 27 October 2026
 */
 
 #ifndef TIVIDY_TESTS_WORKFLOW_DEFINITION_VALIDATION_FIXTURES_H
 #define TIVIDY_TESTS_WORKFLOW_DEFINITION_VALIDATION_FIXTURES_H
 
-// Structural fixtures for the validator's dedicated unit-test binary. The Makefile
-// links that binary to the real validator and value objects, without libtividy.a.
-// These definitions therefore cannot conflict with production item implementations.
-// Lifecycle calls deliberately fail: these tests exercise definition validation only.
-// Replace the fixtures with real collaborators when adding full integration tests.
+// Structural item fixtures for the definition tests' dedicated unit-test binary.
+// The Makefile links the real definition core, validator and supporting value objects
+// directly, without libtividy.a, so these item definitions cannot conflict with
+// production implementations. Lifecycle calls deliberately fail: the definition
+// owns its template without binding or executing it. Full integration tests should
+// use real item collaborators when their implementations are available.
 
 #include <memory>
 #include <utility>
@@ -102,12 +103,6 @@ bool tividy::TaskItem::performsIrreversibleWork() const { return false; }
 NO_LIFECYCLE(TaskItem)
 tividy::ManualTask::ManualTask(const WorkItemSpec& spec) : CloneableTask<ManualTask>(spec) {}
 void tividy::ManualTask::performWork(const Participant&, Outcome&) {}
-
-tividy::WorkflowDefinition::WorkflowDefinition(const std::string& name, unsigned version,
-	const std::string& description, std::unique_ptr<WorkItem> root, const DefinitionPolicies& policies)
-	: name_ref(name), version_ref(version), description_ref(description),
-	  template_root(std::move(root)), policies_ref(policies) {}
-tividy::WorkflowDefinition::~WorkflowDefinition() {}
 
 class ValidationTestAssignment : public tividy::AssignmentStrategy {
 public:
