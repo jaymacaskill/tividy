@@ -1,0 +1,43 @@
+html
+{
+	--page-link-color: #A8662F;
+	--page-visited-link-color: #8A5226;
+	--group-header-color: #6B4423;
+	--footer-foreground-color: #5A3A1E;
+	--title-background-color: #FBF4EE;
+	--header-background-color: #FBF4EE;
+	--index-odd-item-bg-color: #FDF8F3;
+	--memdecl-background-color: #FDF8F3;
+	--blockquote-background-color: #FDF8F3;
+}
+
+/* header strip */
+#titlearea
+{
+	background-color: #FBF4EE;
+	border-bottom: 2px solid #C8864C;
+}
+
+/* logo file */
+#projectlogo img
+{
+	height: 44px;
+	width: auto;
+	margin: 10px 14px 10px 18px;
+}
+
+#projectname
+{
+	color: #2F1F12;
+	font: 600 20px Tahoma, Arial, sans-serif;
+}
+
+#projectnumber
+{
+	color: #C8864C;
+}
+
+#projectbrief
+{
+	color: #6B5444;
+}
