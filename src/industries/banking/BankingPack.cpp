@@ -20,34 +20,75 @@ BankingPack.cpp
 #include "industries/banking/BankingParts.h"
 #include "engine/items/WorkItemDecorator.h"
 #include "engine/policies/RoutingStrategy.h"
+#include "engine/facade/IndustryPack.h"
+#include "ui/ClientProfile.h"
 
 namespace tividy
 {
     namespace banking
     {
-        //Start of DisputeDirector
-        DisputeDirector::DisputeDirector(const IndustryPack& pack) : pack(pack)
+        std::string BankingPack::key() const
         {
+            return "banking";
         }
 
-        std::string DisputeDirector::workflowName() const
-        { 
-            return "transaction-dsipute";
+        std::string BankingPack::displayName() const
+        {
+            return "Banking: Transaction Dispute Resolution";
         }
 
-        unsigned DisputeDirector::version() const
+        std::unique_ptr<WorkflowDirector> BankingPack::createDirector() const
         {
-            return 1;
+            return std::unique_ptr<WorkflowDirector>(new DisputeDirector(*this));
         }
 
-        std::string DisputeDirector::description() const
+        std::vector<Participant> BankingPack::createParticipants() const
         {
-            return "Transaction dispute resolution including dispute lodging from customer, merchant response, decision from analyst, appeals and settlement";
+            return {
+                Participant("banking-cust-1", "Customer", {"customer"}),
+                Participant("banking-agent-1", "Dispute Agent", {"dispute-agent"}),
+                Participant("banking-merchant-1", "Merchant Representative", {"merchant-rep"}),
+                Participant("banking-analyst-1", "Dispute Analyst", {"dispute-analyst"}),
+                Participant("banking-senior-1", "Senior Analyst", {"senior-analyst"}),
+                Participant("banking-compliance-1", "Compliance Officer", {"compliance-officer"}),
+                Participant("banking-sys-1", "System", {"system"})
+            };
         }
 
-        void DisputeDirector::construct(WorkflowBuilder& builder) const
+        std::vector<std::unique_ptr<ExternalConnector> > BankingPack::createConnector() const
         {
+            std::vector<std::unique_ptr<ExternalConnector> > connectors;
+
+            connectors.push_back(std::unique_ptr<ExternalConnector>(new CoreBankingAdapter(
+                    std::unique_ptr<CoreBankingVendor>(new CoreBankingVendor()))));
+        
+            connectors.push_back(std::unique_ptr<ExternalConnector>(new CardSchemeAdapter(
+                    std::unique_ptr<CardSchemeVendor>(new CardSchemeVendor()))));
+        
+            connectors.push_back(std::unique_ptr<ExternalConnector>(new LoggingNotifier()));
+        
+            return connectors;
+        }
+
+        std::shared_ptr<const EscalationHandler> BankingPack::createEscalationChain() const
+        {
+            auto compliance = std::make_shared<RoleEscalationHandler>("compliance-officer", 2);
+            return std::make_shared<RoleEscalationHandler>("senior-analyst", 1, compliance)
+        }
+
+        ClientProfile BankingPack::createProfile() const
+        {
+            ClientProfile profile;
             
+            profile.product_name = "TIVIDY Resolve";
+            profile.accent = "\033[38;2;255;191;0m";
+            profile.vocabulary["instance"] = "Dispute case";
+            profile.vocabulary["item"] = "Action";
+            profile.vocabulary["workflow"] = "Dispute process";
+            profile.vocabulary["participant"] = "Party";
+            profile.vocabulary["escalate"] = "Refer to supervisor";
+
+            return profile;
         }
     }
 }
