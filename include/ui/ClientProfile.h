@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 23 October 2026
+Last Modified: 26 October 2026
 */
 
 /**
@@ -42,7 +42,7 @@ namespace tividy
 		std::string product_name;                          /**< Banner title, e.g. "TIVIDY Connect". Default "TIVIDY". */
 		std::string tagline;                               /**< Default "". */
 		std::string banner;                                /**< Optional multi-line ASCII art. Default "". */
-		std::string accent;                                /**< ANSI colour code for headings, e.g. "\033[36m". "" = plain text. */
+		std::string accent;                                /**< ANSI colour code for headings, e.g. \033[38;2;216;137;76m"". "" = plain text. */
 		std::map<std::string, std::string> vocabulary;     /**< engine term -> display term. */
 	};
 } // namespace tividy
