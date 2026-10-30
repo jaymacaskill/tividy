@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
  
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 28 October 2026
+Last Modified: 30 October 2026
  
 ActionHistory.cpp
 */
@@ -73,16 +73,22 @@ namespace tividy
         return executed.size();
     }
 
-    std::vector<std::string> ActionHistory::describeAll() const
-    {
-        std::vector<std::string> descriptions;
-        // descriptions.reserve(executed.size());
-        for (std::size_t i = 0; i < executed.size(); ++i) {
-            descriptions.push_back(std::to_string(i + 1) + ". " + executed[i]->describe());
-        }
-
-        return descriptions;
-    }
+  std::vector<std::string> ActionHistory::describeAll() const
+  {
+      std::vector<std::string> descriptions;
+      for (std::size_t i = 0; i < executed.size(); ++i) {
+          const std::string prefix = std::to_string(i + 1) + ". ";
+          const std::string text = executed[i]->describe();
+  
+          std::string lined;
+          for (std::size_t c = 0; c < text.size(); ++c) {
+              lined += text[c];
+              if (text[c] == '\n') lined += std::string(prefix.size(), ' ');
+          }
+          descriptions.push_back(prefix + lined);
+      }
+      return descriptions;
+  }
 
 } // namespace tividy 
 
