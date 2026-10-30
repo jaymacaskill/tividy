@@ -22,8 +22,6 @@ using namespace tividy;
 using namespace tividy::banking;
 using namespace tividy::telecom;
 
-// --- Banking Adapter Tests ---
-
 TEST(AdapterPattern, CoreBankingSuccess) {
     auto vendor = std::unique_ptr<CoreBankingVendor>(new CoreBankingVendor());
     CoreBankingAdapter adapter(std::move(vendor));
@@ -50,12 +48,12 @@ TEST(AdapterPattern, CoreBankingRetryableFailure) {
     req.operation = "post_provisional_credit";
     req.params["card_ref"] = "CARD-123";
     req.params["amount"] = "500.00";
-    req.params["simulate_failures"] = "1"; // Triggers runtime_error
+    req.params["simulate_failures"] = "1"; 
 
     ConnectorResult res = adapter.invoke(req);
     
     EXPECT_FALSE(res.success);
-    EXPECT_TRUE(res.retryable); // Should be true for std::runtime_error
+    EXPECT_TRUE(res.retryable); 
     EXPECT_EQ(res.message, "core banking unavailable");
 }
 
@@ -66,12 +64,12 @@ TEST(AdapterPattern, CoreBankingNonRetryableFailure) {
     ConnectorRequest req;
     req.operation = "post_provisional_credit";
     req.params["card_ref"] = "CARD-123";
-    req.params["amount"] = "-50.00"; // Triggers invalid_argument
+    req.params["amount"] = "-50.00";
 
     ConnectorResult res = adapter.invoke(req);
     
     EXPECT_FALSE(res.success);
-    EXPECT_FALSE(res.retryable); // Should be false for invalid_argument
+    EXPECT_FALSE(res.retryable); 
     EXPECT_EQ(res.message, "amount must be a positive number");
 }
 
@@ -100,7 +98,7 @@ TEST(AdapterPattern, CreditBureauSuccess) {
 
     ConnectorRequest req;
     req.operation = "score";
-    req.params["id_number"] = "9001015000081"; // Ends in 8, so score is 750
+    req.params["id_number"] = "9001015000081"; 
 
     ConnectorResult res = adapter.invoke(req);
     
