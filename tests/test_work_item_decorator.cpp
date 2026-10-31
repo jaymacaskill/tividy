@@ -26,6 +26,8 @@ The wrapped items here are fakes that log every call that reaches them as "<item
 exactly what a decorator forwarded, with which arguments, and in what order.
 */
 
+// IMPORTANT: THIS FILE WILL HAVE CHANGES THAT MATCH THE CORRECT STANDARDS OF THE IMPLEMENTATION
+
 namespace tividy
 {
     namespace
