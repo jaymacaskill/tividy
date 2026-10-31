@@ -9,8 +9,11 @@ Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
 Last Modified: 30 October 2026
+*/
 
-BankingPack.cpp
+/**
+* @file BankingPack.cpp
+* @brief Implements BankingPack (Abstract Factory): the banking people, connectors, escalation chain and look that plug into the engine.
 */
 
 #ifndef TIVIDY_BANKING_PACK_CPP
@@ -21,6 +24,8 @@ BankingPack.cpp
 #include "engine/items/WorkItemDecorator.h"
 #include "engine/policies/RoutingStrategy.h"
 #include "engine/facade/IndustryPack.h"
+#include "engine/policies/EscalationHandler.h"
+#include "engine/connectors/ExternalConnector.h"
 #include "ui/ClientProfile.h"
 
 namespace tividy
