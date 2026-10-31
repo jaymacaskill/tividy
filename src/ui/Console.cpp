@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
-
-Console.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Console.cpp
+ * @brief Implements the Console interface: StdConsole (real terminal) and ScriptedConsole (canned input for tests).
+ */
 
 #ifndef TIVIDY_UI_CONSOLE_CPP
 #define TIVIDY_UI_CONSOLE_CPP
