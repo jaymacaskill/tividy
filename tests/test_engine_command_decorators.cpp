@@ -19,6 +19,13 @@ namespace tividy
             unsigned executeCalls = 0;
             unsigned undoCalls = 0;
             bool reversible = true;
+            bool retryable = true;
+            unsigned retryCutoff = 0;
+
+            bool supportsRetry() const override
+            {
+                return retryable && (retryCutoff == 0 || executeCalls < retryCutoff);
+            }
 
             CommandResult execute() override
             {
@@ -162,5 +169,49 @@ namespace tividy
         EXPECT_FALSE(result.success);
         EXPECT_EQ(result.message, "failure 1 (after 1 attempts)");
         EXPECT_EQ(observed->executeCalls, 1u);
+    }
+
+    TEST(CommandDecoratorTest, ForwardsRetryCapability)
+    {
+        std::unique_ptr<FakeCommand> inner(new FakeCommand);
+        FakeCommand* observed = inner.get();
+        CommandDecorator command(std::move(inner));
+        const Command& decorated = command;
+    
+        EXPECT_TRUE(decorated.supportsRetry());
+    
+        observed->retryable = false;
+        EXPECT_FALSE(decorated.supportsRetry());
+    
+        observed->retryable = true;
+        EXPECT_TRUE(decorated.supportsRetry());
+    }
+    
+    TEST(RetryingCommandTest, StopsWhenChildDisallowsRetry)
+    {
+        std::unique_ptr<FakeCommand> inner(new FakeCommand(1));
+        FakeCommand* observed = inner.get();
+        observed->retryable = false;
+        RetryingCommand command(std::move(inner), 5);
+    
+        const CommandResult result = command.execute();
+    
+        EXPECT_FALSE(result.success);
+        EXPECT_EQ(result.message, "failure 1 (after 1 attempts)");
+        EXPECT_EQ(observed->executeCalls, 1u);
+    }
+    
+    TEST(RetryingCommandTest, RechecksCapabilityAfterEachFailure)
+    {
+        std::unique_ptr<FakeCommand> inner(new FakeCommand(3));
+        FakeCommand* observed = inner.get();
+        observed->retryCutoff = 2;
+        RetryingCommand command(std::move(inner), 5);
+    
+        const CommandResult result = command.execute();
+    
+        EXPECT_FALSE(result.success);
+        EXPECT_EQ(result.message, "failure 2 (after 2 attempts)");
+        EXPECT_EQ(observed->executeCalls, 2u);
     }
 }

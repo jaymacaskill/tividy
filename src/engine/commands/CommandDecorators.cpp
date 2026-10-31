@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
  
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 30 October 2026
+Last Modified: 31 October 2026
  
 CommandDecirators.cpp
 */
@@ -20,6 +20,7 @@ CommandDecirators.cpp
 #include "engine/commands/Command.h"
 #include "engine/core/Errors.h"
 #include <memory>
+#include <utility>
 #include <string>
 
 namespace tividy
@@ -51,6 +52,11 @@ namespace tividy
         return inner_ref->isReversible();
     }
 
+    bool CommandDecorator::supportsRetry() const
+    {
+        return inner_ref->supportsRetry();
+    }
+
     std::string CommandDecorator::describe() const
     {
         return inner_ref->describe();
@@ -77,7 +83,7 @@ namespace tividy
         CommandResult tryExecute = inner().execute(); //the first attempt
         unsigned attempt = 1;
 
-        while (!tryExecute.success && attempt < max_attempts)
+        while (!tryExecute.success && attempt < max_attempts && inner().supportsRetry())
         {
             tryExecute = inner().execute();
             ++attempt;
