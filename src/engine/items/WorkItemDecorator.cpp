@@ -30,7 +30,7 @@ WorkItemDecorator.cpp
 
 namespace tividy
 {
-	WorkItemDecorator::WorkItemDecorator(std::unique_ptr<WorkItem> wrapped) : component_ref(std::move(wrapped)), context_ref(0)
+	WorkItemDecorator::WorkItemDecorator(std::unique_ptr<WorkItem> wrapped) : component_ref(std::move(wrapped)), context_ref(nullptr)
 	{
 		if (!component_ref) throw InvalidDefinitionError("a decorator needs a work item to wrap");
 	}
@@ -183,7 +183,7 @@ namespace tividy
 
 	WorkContext& WorkItemDecorator::context() const
 	{
-		if (context_ref == 0) throw InvalidStateError("work item " + spec().id() + " is not bound to a work context");
+		if (context_ref == nullptr) throw InvalidStateError("work item " + spec().id() + " is not bound to a work context");
 
 		return *context_ref;
 	}
