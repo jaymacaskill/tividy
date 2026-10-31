@@ -55,7 +55,7 @@ namespace tividy
             };
         }
 
-        std::vector<std::unique_ptr<ExternalConnector> > BankingPack::createConnector() const
+        std::vector<std::unique_ptr<ExternalConnector> > BankingPack::createConnectors() const
         {
             std::vector<std::unique_ptr<ExternalConnector> > connectors;
 
@@ -73,7 +73,7 @@ namespace tividy
         std::shared_ptr<const EscalationHandler> BankingPack::createEscalationChain() const
         {
             auto compliance = std::make_shared<RoleEscalationHandler>("compliance-officer", 2);
-            return std::make_shared<RoleEscalationHandler>("senior-analyst", 1, compliance)
+            return std::make_shared<RoleEscalationHandler>("senior-analyst", 1, compliance);
         }
 
         ClientProfile BankingPack::createProfile() const
