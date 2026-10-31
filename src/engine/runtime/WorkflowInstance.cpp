@@ -187,8 +187,11 @@ namespace tividy
 		return context_ref;
 	}
 
-	void WorkflowInstance::addObserver(std::unique_ptr<EventObserver> observer)
+		void WorkflowInstance::addObserver(std::unique_ptr<EventObserver> observer)
 	{
+		if (!observer)
+			throw InvalidStateError("cannot add a null observer to instance " + id_ref);
+
 		events_ref.attach(observer.get());
 		extra_observers.push_back(std::move(observer));
 	}
