@@ -2,6 +2,8 @@
 #include "engine/definition/WorkflowDefinition.h"
 #include "engine/core/Errors.h"
 #include "engine/policies/AssignmentStrategy.h"
+#include "engine/items/WorkItemIterator.h" 
+#include "engine/items/WorkItemVisitor.h"  
 #include <memory>
 
 using namespace tividy;
