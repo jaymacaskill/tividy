@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 28 October 2026
-
-StageItem.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file StageItem.cpp
+ * @brief Implements StageItem, the Composite container: it holds child work items, derives its own status from them, and passes cancel and skip down to its children.
+ */
 
 #ifndef TIVIDY_ITEMS_STAGEITEM_CPP
 #define TIVIDY_ITEMS_STAGEITEM_CPP
@@ -186,7 +189,7 @@ namespace tividy
 			const WorkItem* blocker = firstUnskippable(*children_ref[i]);
 			if (blocker != 0)
 				throw InvalidStateError("Stage " + spec_ref.id() + " cannot be skipped: " + blocker->spec().id() +
-				                        " is " + toString(blocker->status()));
+										" is " + toString(blocker->status()));
 		}
 
 		for (std::size_t i = 0; i < children_ref.size(); ++i)
