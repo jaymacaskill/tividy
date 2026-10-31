@@ -2,7 +2,7 @@
 
 This is how our team works on this repo. `main` is protected, so **nobody pushes to it directly**. Everything goes through a branch and a pull request (PR).
 
-**New here?** Read [the README](README.md) first, then [how we planned the build](docs/IMPLEMENTATION_PLAN.md) to see who owns what and which order the files are built in.
+**New here?** Read [the README](README.md) first, then [how we planned the build](docs/misc/TIVIDY_Implementation_Plan.pdf) to see who owns what and which order the files are built in.
 
 ## The workflow
 
