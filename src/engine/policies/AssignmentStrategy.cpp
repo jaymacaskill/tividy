@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-AssignmentStrategy.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file AssignmentStrategy.cpp
+ * @brief Implements the Strategy classes that choose who does a work item: RoleBasedAssignment and DataDrivenAssignment.
+ */
 
 #ifndef TIVIDY_POLICIES_ASSIGNMENTSTRATEGY_CPP
 #define TIVIDY_POLICIES_ASSIGNMENTSTRATEGY_CPP
