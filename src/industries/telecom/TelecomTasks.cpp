@@ -8,10 +8,15 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
+Last Modified: 1 November 2026
 
 TelecomTasks.cpp
 */
+
+/**
+ * @file TelecomTasks.cpp
+ * @brief Implements the two telecom tasks (Template Method): the automatic credit check and the service provisioning and activation.
+ */
 
 #ifndef TIVIDY_TELECOM_TELECOMTASKS_CPP
 #define TIVIDY_TELECOM_TELECOMTASKS_CPP

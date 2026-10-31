@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
-
-BankingDirector.cpp
+Last Modified: 1 November 2026
 */
+
+/**
+ * @file BankingDirector.cpp
+ * @brief Implements DisputeDirector (Builder pattern): assembles the "transaction-dispute" workflow, its deadlines and its routing rules.
+ */
 
 #ifndef TIVIDY_BANKING_BANKINGDIRECTOR_CPP
 #define TIVIDY_BANKING_BANKINGDIRECTOR_CPP

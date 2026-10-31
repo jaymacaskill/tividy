@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
-
-BankingTasks.cpp
+Last Modified: 1 November 2026
 */
+
+/**
+ * @file BankingTasks.cpp
+ * @brief Implements the five banking dispute tasks (Template Method): provisional credit, chargeback, merchant response, decision and settlement.
+ */
 
 #ifndef TIVIDY_BANKING_BANKINGTASKS_CPP
 #define TIVIDY_BANKING_BANKINGTASKS_CPP
