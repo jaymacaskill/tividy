@@ -22,6 +22,8 @@ namespace tividy
 {
     Command::~Command() { }
 
+    bool Command::supportsRetry() const { return false; }
+
     CommandResult CommandResult::ok(const std::string& message)
     {
         CommandResult obj;
