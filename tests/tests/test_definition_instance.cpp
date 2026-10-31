@@ -15,7 +15,7 @@ Last Modified: 31 October 2026
 #include "engine/definition/WorkflowDefinition.h"
 #include "engine/items/TaskItem.h"
 #include "engine/core/Errors.h"
-// #include "engine/runtime/WorkflowInstance.h" // Uncomment when Ruan merges
+// #include "engine/runtime/WorkflowInstance.h" 
 
 using namespace tividy;
 
@@ -64,7 +64,7 @@ TEST(WorkflowDefinitionInstanceTest, CreateInstanceClonesTemplate) {
     
     WorkflowDefinition def("TestWorkflow", 1, "Desc", std::move(root), good_policies);
     
-    // --- THIS PART IS COMMENTED OUT UNTIL RUAN MERGES WorkflowInstance.cpp ---
+    // --- THIS PART IS COMMENTED OUT UNTIL WorkflowInstance.cpp IS MERGED ---
     /*
     Services dummy_services{...}; // Needs Clock, Directory, Connectors
     WorkflowData data;
