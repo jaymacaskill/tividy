@@ -194,11 +194,15 @@ namespace tividy
 					result = policies.escalation->handle(request);
 				}
 
-				if (result.resolved)
+				if (result.resolved && policies.assignment)
 				{
 					const Id id = policies.assignment->chooseParticipant(item, result.approver_role,
 						instance.context().directory(), instance.data());
 					if (!id.empty()) item.assign(id);
+				}
+				else if (result.resolved) 
+				{
+					publishNote(instance, item.spec().id(), "No assignment strategy to route escalation for " + item.spec().id());
 				}
 				else
 				{
