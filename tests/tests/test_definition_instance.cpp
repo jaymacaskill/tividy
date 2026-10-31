@@ -8,13 +8,14 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
+Last Modified: 31 October 2026
 */
 
 #include <gtest/gtest.h>
 #include "engine/definition/WorkflowDefinition.h"
 #include "engine/items/TaskItem.h"
 #include "engine/core/Errors.h"
+// #include "engine/runtime/WorkflowInstance.h" // Uncomment when Ruan merges
 
 using namespace tividy;
 
@@ -40,17 +41,47 @@ TEST(WorkflowDefinitionInstanceTest, ValidateThrowsOnInvalidDefinition) {
     EXPECT_THROW(def.validate(), InvalidDefinitionError);
 }
 
-TEST(WorkflowDefinitionInstanceTest, TemplateTreeClonesIndependently) {
-    // Setup a valid policy
+TEST(WorkflowDefinitionInstanceTest, ValidDefinitionPassesValidation) {
     DefinitionPolicies good_policies;
-    good_policies.assignment = std::make_shared<RoleBasedAssignment>(); // Assumes this exists in your headers
+    // Assuming RoleBasedAssignment has a default constructor
+    good_policies.assignment = std::make_shared<RoleBasedAssignment>(); 
+    
+    WorkItemSpec spec("task1", "Task 1");
+    auto root = std::unique_ptr<WorkItem>(new DummyTask(spec));
+    
+    WorkflowDefinition def("TestWorkflow", 1, "Desc", std::move(root), good_policies);
+    
+    EXPECT_NO_THROW(def.validate());
+}
+
+TEST(WorkflowDefinitionInstanceTest, CreateInstanceClonesTemplate) {
+    DefinitionPolicies good_policies;
+    good_policies.assignment = std::make_shared<RoleBasedAssignment>();
     
     WorkItemSpec spec("task1", "Task 1");
     auto root = std::unique_ptr<WorkItem>(new DummyTask(spec));
     WorkItem* original_root_ptr = root.get();
     
     WorkflowDefinition def("TestWorkflow", 1, "Desc", std::move(root), good_policies);
-    // Note: To truly test this, WorkflowInstance needs to be implemented. 
-    // For now, this test just ensures the definition constructs without crashing.
-    EXPECT_NO_THROW(def.validate());
+    
+    // --- THIS PART IS COMMENTED OUT UNTIL RUAN MERGES WorkflowInstance.cpp ---
+    /*
+    Services dummy_services{...}; // Needs Clock, Directory, Connectors
+    WorkflowData data;
+    
+    auto instance = def.createInstance("inst1", data, dummy_services);
+    
+    EXPECT_NE(instance, nullptr);
+    EXPECT_EQ(instance->status(), InstanceStatus::Created);
+    
+    // Check Prototype: the instance root should be a DIFFERENT memory address than the definition root
+    EXPECT_NE(&instance->root(), original_root_ptr);
+    
+    // Check Prototype: mutating the clone shouldn't affect the original
+    instance->root().cancel("test");
+    EXPECT_EQ(original_root_ptr->status(), ItemStatus::Created);
+    */
+    
+    // For now, just assert the definition itself survived the move
+    EXPECT_EQ(def.name(), "TestWorkflow");
 }
