@@ -9,8 +9,11 @@ Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
 Last Modified: 31 October 2026
+*/
 
-TelecomPack.cpp
+/**
+* @file TelecomPack.cpp
+* @brief Implements TelecomPack (Abstract Factory): the telecom people, connectors, regional assignment, escalation chain and look that plug into the engine.
 */
 
 #ifndef TIVIDY_TELECOM_PACK_CPP
