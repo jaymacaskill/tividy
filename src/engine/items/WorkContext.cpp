@@ -1,8 +1,22 @@
-/** @file WorkContext.cpp
- * @brief Role C parameter-object support: non-owning collaborators and per-context bookkeeping.
- * @details Ownership follows the local team implementation plan's Phase 1 Role C allocation.
- * Referenced collaborators must outlive this context; no lifecycle/routing behavior is performed here.
+/*
+Aidan du Bruyn (25040104)
+Connor Human (22752154)
+Ishmael Ngwasheng (24642542)
+Jay Macaskill (25198387)
+Keval Govind (24904407)
+Ruan van Tonder (25284607)
+Thabo Ngwabi (24742512)
+
+COS 214 (Software Modelling) TIVIDY
+Last Modified: 31 October 2026
+*/
+
+/**
+ * @file WorkContext.cpp
+ * @brief Implements WorkContext: the bundle of collaborators (data, events, clock, connectors, directory) that every work item uses.
+ * @details Holds non-owning references, so the referenced objects must outlive the context. It does no routing or lifecycle work itself.
  */
+
 #include "engine/items/WorkContext.h"
 
 namespace tividy
