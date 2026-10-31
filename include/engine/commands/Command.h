@@ -36,18 +36,22 @@ namespace tividy
 
 	/**
 	 * @brief Command (GoF "Command"): a request as an object so it can be logged, undone, combined (MacroCommand) and decorated.
-	 * Invoker = ActionHistory. Receivers = WorkItem. Lifecycle: construct -> execute() once -> optionally undo() once.
+	 * Invoker = ActionHistory. Receivers = WorkItem. Commands execute once by default; implementations that return true from
+	 * supportsRetry() may execute again after a failed attempt or a successful undo().
 	 */
 	class Command
 	{
 		public:
 			virtual ~Command();
 
-			/** @brief Runs the request. @return success or failure with a reason. Never throws EngineError. @pre not executed before. */
+			/** @brief Runs the request. @return success or failure with a reason. Never throws EngineError. */
 			virtual CommandResult execute() = 0;
 
 			/** @brief Reverses a successful execute(). @return failure if not possible. @pre execute() succeeded and isReversible(). */
 			virtual CommandResult undo() = 0;
+
+			/** @return true if this command supports execute() again after failure or successful undo(). */
+			virtual bool supportsRetry() const;
 
 			/** @return true if undo() can restore the state before execute(). Before execute() returns true. */
 			virtual bool isReversible() const = 0;

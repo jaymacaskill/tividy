@@ -34,11 +34,12 @@ namespace tividy
 	 *
 	 * ### execute(): all-or-nothing
 	 *  1. For each child in insertion order: r = child->execute().
-	 *  2. On the first failure: undo every already-executed child in REVERSE order (ignoring undo failures), then return
-	 *     failure("<name> stopped at step k: <child message>; rolled back n step(s)").
+	 *  2. On the first failure: undo every already-executed child in REVERSE order, report rollback failures,
+	 *     and allow another execution only if rollback succeeded and every attempted child supports retry.
 	 *  3. If all succeed return ok("<name>: n step(s) done"). An empty macro succeeds with "0 step(s)".
-	 * ### undo(): undoes children in reverse order. Requires isReversible(). Returns failure naming the first child that failed.
+	 * ### undo(): undoes children in reverse order. Requires isReversible().
 	 * ### isReversible(): true iff every child is reversible.
+	 * ### supportsRetry(): true iff every child supports retry after failure or successful undo.
 	 * ### describe(): "<name> [n step(s)]" then one indented line per child.
 	 */
 	class MacroCommand : public Command
@@ -47,19 +48,22 @@ namespace tividy
 			explicit MacroCommand(const std::string& name);
 			~MacroCommand() override;
 
-			/** Appends @p child and takes ownership. @pre child != nullptr and the macro has not executed (else InvalidStateError). */
+			/** Appends @p child and takes ownership. @pre child != nullptr and the macro has never started (else InvalidStateError). */
 			void add(std::unique_ptr<Command> child);
 
 			std::size_t size() const;
 			CommandResult execute() override;
 			CommandResult undo() override;
 			bool isReversible() const override;
+			bool supportsRetry() const override;
 			std::string describe() const override;
 		private:
 			std::string name;
 			std::vector<std::unique_ptr<Command> > children;
 			std::size_t executed_count;
 			bool executed;
+			bool started;
+			bool retry_allowed;
 	};
 
 	/** Decorator (GoF "Decorator"): a Command that wraps a Command; by default forwards everything. Decorators stack. */
@@ -83,7 +87,7 @@ namespace tividy
 	/**
 	 * @brief Re-runs the wrapped command when it fails.
 	 * execute(): try up to max_attempts times (>= 1); return the first success, else the last failure with " (after k attempts)".
-	 * Safe because InstanceCommand and MacroCommand leave no partial effect on failure. describe(): inner + " (retry up to n)".
+	 * Retrying is safe only when the wrapped command reports supportsRetry(). describe(): inner + " (retry up to n)".
 	 */
 	class RetryingCommand : public CommandDecorator
 	{
