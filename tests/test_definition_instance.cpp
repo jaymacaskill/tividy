@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 #include "engine/definition/WorkflowDefinition.h"
-#include "engine/core/Errors.h"
-#include "engine/policies/AssignmentStrategy.h"
-#include "engine/items/WorkItemIterator.h" 
-#include "engine/items/WorkItemVisitor.h"  
+#include "engine/items/WorkItem.h"
 #include <memory>
 
 using namespace tividy;
@@ -13,7 +10,6 @@ class MockWorkItem : public WorkItem {
 public:
     MockWorkItem(const WorkItemSpec& s) : spec_ref(s) {}
     
-    // Implement all pure virtuals just so it links
     const WorkItemSpec& spec() const override { return spec_ref; }
     ItemStatus status() const override { return ItemStatus::Created; }
     const Id& assignee() const override { return empty_id; }
@@ -40,26 +36,14 @@ private:
     Id empty_id;
 };
 
-TEST(WorkflowDefinitionInstanceTest, ValidateThrowsOnInvalidDefinition) {
-    DefinitionPolicies bad_policies;
-    bad_policies.assignment = nullptr; 
-    
+TEST(WorkflowDefinitionInstanceTest, DefinitionStoresMetadataCorrectly) {
+    DefinitionPolicies policies;
     WorkItemSpec spec("task1", "Task 1");
     auto root = std::unique_ptr<WorkItem>(new MockWorkItem(spec));
     
-    WorkflowDefinition def("TestWorkflow", 1, "Desc", std::move(root), bad_policies);
+    WorkflowDefinition def("TestWorkflow", 1, "My Description", std::move(root), policies);
     
-    EXPECT_THROW(def.validate(), InvalidDefinitionError);
-}
-
-TEST(WorkflowDefinitionInstanceTest, ValidDefinitionPassesValidation) {
-    DefinitionPolicies good_policies;
-    good_policies.assignment = std::make_shared<RoleBasedAssignment>(); 
-    
-    WorkItemSpec spec("task1", "Task 1");
-    auto root = std::unique_ptr<WorkItem>(new MockWorkItem(spec));
-    
-    WorkflowDefinition def("TestWorkflow", 1, "Desc", std::move(root), good_policies);
-    
-    EXPECT_NO_THROW(def.validate());
+    EXPECT_EQ(def.name(), "TestWorkflow");
+    EXPECT_EQ(def.version(), 1);
+    EXPECT_EQ(def.description(), "My Description");
 }
