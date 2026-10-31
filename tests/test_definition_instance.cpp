@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "engine/definition/WorkflowDefinition.h"
 #include "engine/items/WorkItem.h"
+#include "engine/items/WorkItemIterator.h" 
+#include "engine/items/WorkItemVisitor.h"  
 #include <memory>
 
 using namespace tividy;
