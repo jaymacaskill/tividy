@@ -132,7 +132,7 @@ We use **GoogleTest**, and we write tests as we go: a feature or class should ar
 
 ## Working in phases
 
-Work was planned in dependency-ordered phases (see [the implementation plan](docs/IMPLEMENTATION_PLAN.md)):
+Work was planned in dependency-ordered phases (see [the implementation plan](docs/misc/TIVIDY_Implementation_Plan.pdf)):
 
 - Each `.cpp` has one author, and a header is shared by at most two people. The pair agree up front who writes which functions.
 - Files that call each other in a circle go on a shared **integration branch** (`feature/p<phase>-integration-<name>`). Helpers open PRs into it; the lead opens the single PR into `main`. Those inner PRs run no CI, so build locally first.
