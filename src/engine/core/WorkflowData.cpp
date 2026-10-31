@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 24 October 2026
-
-WorkflowData.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file WorkflowData.cpp
+ * @brief Implements WorkflowData, the key-value store that holds one workflow instance's data.
+ */
 
 #ifndef TIVIDY_CORE_WORKFLOWDATA_CPP
 #define TIVIDY_CORE_WORKFLOWDATA_CPP

@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-RoutingStrategy.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file RoutingStrategy.cpp
+ * @brief Implements the routing Strategies that decide what runs next: DependencyRouting, OutcomeTableRouting and DataValueRouting.
+ */
 
 #ifndef TIVIDY_POLICIES_ROUTINGSTRATEGY_CPP
 #define TIVIDY_POLICIES_ROUTINGSTRATEGY_CPP

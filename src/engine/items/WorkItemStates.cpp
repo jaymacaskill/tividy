@@ -8,8 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 28 October 2026
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file WorkItemStates.cpp
+ * @brief Implements the nine concrete states of a task (State pattern) and which lifecycle operations each state allows.
+ */
 
 #ifndef TIVIDY_ITEMS_WORKITEMSTATES_CPP
 #define TIVIDY_ITEMS_WORKITEMSTATES_CPP
@@ -22,430 +27,430 @@ Last Modified: 28 October 2026
 
 namespace tividy
 {
-    namespace 
-    {
-        const Participant& system_actor()
-        {
-            static const Participant p("system", "System", std::set<std::string>());
-            return p;
-        }
-    } // anonymous namespace
-    
+	namespace 
+	{
+		const Participant& system_actor()
+		{
+			static const Participant p("system", "System", std::set<std::string>());
+			return p;
+		}
+	} // anonymous namespace
+	
 
-    void WorkItemState::publish(TaskItem& /*item*/) const
-    {
-        std::string msg = "publish() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);
-    }
+	void WorkItemState::publish(TaskItem& /*item*/) const
+	{
+		std::string msg = "publish() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);
+	}
 
-    void WorkItemState::assign(TaskItem& /*item*/, const Id& /*participant_id*/) const
-    {
-        std::string msg = "assign() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);       
-    }
+	void WorkItemState::assign(TaskItem& /*item*/, const Id& /*participant_id*/) const
+	{
+		std::string msg = "assign() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);       
+	}
 
-    void WorkItemState::start(TaskItem& /*item*/, const Participant& /*actor*/) const
-    {
-        std::string msg = "start() is not allowed while " + toString(status());
-        throw InvalidStateError(msg); 
-    }
+	void WorkItemState::start(TaskItem& /*item*/, const Participant& /*actor*/) const
+	{
+		std::string msg = "start() is not allowed while " + toString(status());
+		throw InvalidStateError(msg); 
+	}
 
-    void WorkItemState::submit(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
-    {
-        std::string msg = "submit() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);        
-    }
+	void WorkItemState::submit(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
+	{
+		std::string msg = "submit() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);        
+	}
 
-    void WorkItemState::complete(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
-    {
-        std::string msg = "complete() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);        
-    }
+	void WorkItemState::complete(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
+	{
+		std::string msg = "complete() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);        
+	}
 
-    void WorkItemState::approve(TaskItem& /*item*/, const Participant& /*reviewer*/, const Outcome& /*outcome*/) const
-    {
-        std::string msg = "approve() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);         
-    }
+	void WorkItemState::approve(TaskItem& /*item*/, const Participant& /*reviewer*/, const Outcome& /*outcome*/) const
+	{
+		std::string msg = "approve() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);         
+	}
 
-    void WorkItemState::reject(TaskItem& /*item*/, const Participant& /*reviewer*/, const std::string& /*reason*/) const
-    {
-        std::string msg = "reject() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);    
-    }
+	void WorkItemState::reject(TaskItem& /*item*/, const Participant& /*reviewer*/, const std::string& /*reason*/) const
+	{
+		std::string msg = "reject() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);    
+	}
 
-    void WorkItemState::escalate(TaskItem& /*item*/, const std::string& /*reason*/) const
-    {
-        std::string msg = "escalate() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);   
-    }
+	void WorkItemState::escalate(TaskItem& /*item*/, const std::string& /*reason*/) const
+	{
+		std::string msg = "escalate() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);   
+	}
 
-    void WorkItemState::cancel(TaskItem& /*item*/, const std::string& /*reason*/) const
-    {
-        std::string msg = "cancel() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);   
-    }
+	void WorkItemState::cancel(TaskItem& /*item*/, const std::string& /*reason*/) const
+	{
+		std::string msg = "cancel() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);   
+	}
 
-    void WorkItemState::skip(TaskItem& /*item*/, const std::string& /*reason*/) const
-    {
-        std::string msg = "skip() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);   
-    }
+	void WorkItemState::skip(TaskItem& /*item*/, const std::string& /*reason*/) const
+	{
+		std::string msg = "skip() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);   
+	}
 
-    void WorkItemState::expire(TaskItem& /*item*/, const std::string& /*outcome_code*/, const std::string& /*reason*/) const
-    {
-        std::string msg = "expire() is not allowed while " + toString(status());
-        throw InvalidStateError(msg);   
-    }
-    
-    WorkItemState::~WorkItemState() = default;
-
-
-    //CreatedState implementation
-    const CreatedState& CreatedState::instance()
-    {
-        static CreatedState instance;
-        return instance;
-    }
-
-    ItemStatus CreatedState::status() const
-    {
-        return ItemStatus::Created;
-    }
-
-    void CreatedState::publish(TaskItem& item) const
-    {
-        moveTo(item, AvailableState::instance());
-        emit(item, EventType::ItemAvailable, "", Outcome(), "Item published and now available.");
-    }
-
-    void CreatedState::cancel(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, CancelledState::instance());
-        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
-    }
-
-    void CreatedState::skip(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, SkippedState::instance());
-        emit(item, EventType::ItemSkipped, "", Outcome::rejected("SKIPPED", reason), "Item skipped.");
-    }
-
-    //End of CreatedState implementation
+	void WorkItemState::expire(TaskItem& /*item*/, const std::string& /*outcome_code*/, const std::string& /*reason*/) const
+	{
+		std::string msg = "expire() is not allowed while " + toString(status());
+		throw InvalidStateError(msg);   
+	}
+	
+	WorkItemState::~WorkItemState() = default;
 
 
-    //AvailableState implementation
-    const AvailableState& AvailableState::instance()
-    {
-        static AvailableState instance;
-        return instance;
-    }
+	//CreatedState implementation
+	const CreatedState& CreatedState::instance()
+	{
+		static CreatedState instance;
+		return instance;
+	}
 
-    ItemStatus AvailableState::status() const
-    {
-        return ItemStatus::Available;
-    }   
+	ItemStatus CreatedState::status() const
+	{
+		return ItemStatus::Created;
+	}
 
-    void AvailableState::assign(TaskItem& item, const Id& participant_id) const
-    {
-        setAssignee(item, participant_id);
-        moveTo(item, AssignedState::instance());
-        emit(item, EventType::ItemAssigned, participant_id, Outcome(), "Item assigned to participant.");
-    }
+	void CreatedState::publish(TaskItem& item) const
+	{
+		moveTo(item, AvailableState::instance());
+		emit(item, EventType::ItemAvailable, "", Outcome(), "Item published and now available.");
+	}
 
-    void AvailableState::cancel(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, CancelledState::instance());
-        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
-    }
+	void CreatedState::cancel(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, CancelledState::instance());
+		emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+	}
 
-    void AvailableState::skip(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, SkippedState::instance());
-        emit(item, EventType::ItemSkipped, "", Outcome::rejected("SKIPPED", reason), "Item skipped.");
-    }
+	void CreatedState::skip(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, SkippedState::instance());
+		emit(item, EventType::ItemSkipped, "", Outcome::rejected("SKIPPED", reason), "Item skipped.");
+	}
 
-    //End of AvailableState implementation
-
-
-    //AssignedState implementation
-
-    const AssignedState& AssignedState::instance()
-    {
-        static AssignedState instance;
-        return instance;
-    }
-
-    ItemStatus AssignedState::status() const
-    {
-        return ItemStatus::Assigned;
-    }
-
-    void AssignedState::start(TaskItem& item, const Participant& actor) const
-    {
-        if (actor.id() != item.assignee())
-        {
-            throw PermissionDeniedError("start() is only allowed by the assigned participant.");
-        }
-        moveTo(item, InProgressState::instance());
-        emit(item, EventType::ItemStarted, actor.id(), Outcome(), "Item started by assigned participant.");
-    }
-
-    void AssignedState::escalate(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, EscalatedState::instance());
-        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
-    }
-
-    void AssignedState::cancel(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, CancelledState::instance());
-        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
-    }
-
-    void AssignedState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
-    {
-        recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
-        moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
-    }
-
-    //End of AssignedState implementation
+	//End of CreatedState implementation
 
 
-    //InProgressState implementation
+	//AvailableState implementation
+	const AvailableState& AvailableState::instance()
+	{
+		static AvailableState instance;
+		return instance;
+	}
 
-    const InProgressState& InProgressState::instance()
-    {
-        static InProgressState instance;
-        return instance;
-    }
+	ItemStatus AvailableState::status() const
+	{
+		return ItemStatus::Available;
+	}   
 
-    ItemStatus InProgressState::status() const
-    {
-        return ItemStatus::InProgress;
-    }
+	void AvailableState::assign(TaskItem& item, const Id& participant_id) const
+	{
+		setAssignee(item, participant_id);
+		moveTo(item, AssignedState::instance());
+		emit(item, EventType::ItemAssigned, participant_id, Outcome(), "Item assigned to participant.");
+	}
 
-    void InProgressState::complete(TaskItem& item, const Participant& actor, const Outcome& outcome) const
-    {
-        if (item.spec().requiresReview())
-        {
-            throw InvalidStateError("use submit(): this item requires review");
-        }
+	void AvailableState::cancel(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, CancelledState::instance());
+		emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+	}
 
-        if (actor.id() != item.assignee())
-        {
-            throw PermissionDeniedError("complete() is only allowed by the assigned participant.");
-        }
+	void AvailableState::skip(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, SkippedState::instance());
+		emit(item, EventType::ItemSkipped, "", Outcome::rejected("SKIPPED", reason), "Item skipped.");
+	}
 
-        Outcome edit = outcome;
+	//End of AvailableState implementation
 
-        if (!runWork(item, actor, edit))
-        {
-            return; // left in InProgress
-        }
 
-        recordResult(item, actor, edit);
-        moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, actor.id(), edit, "Item completed by assigned participant.");
-    }
+	//AssignedState implementation
 
-    void InProgressState::submit(TaskItem& item, const Participant& actor, const Outcome& outcome) const
-    {
-        if (!item.spec().requiresReview())
-        {
-            throw InvalidStateError("use complete(): this item has no review step");
-        }
+	const AssignedState& AssignedState::instance()
+	{
+		static AssignedState instance;
+		return instance;
+	}
+
+	ItemStatus AssignedState::status() const
+	{
+		return ItemStatus::Assigned;
+	}
+
+	void AssignedState::start(TaskItem& item, const Participant& actor) const
+	{
+		if (actor.id() != item.assignee())
+		{
+			throw PermissionDeniedError("start() is only allowed by the assigned participant.");
+		}
+		moveTo(item, InProgressState::instance());
+		emit(item, EventType::ItemStarted, actor.id(), Outcome(), "Item started by assigned participant.");
+	}
+
+	void AssignedState::escalate(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, EscalatedState::instance());
+		emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
+	}
+
+	void AssignedState::cancel(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, CancelledState::instance());
+		emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+	}
+
+	void AssignedState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
+	{
+		recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
+		moveTo(item, CompletedState::instance());
+		emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
+	}
+
+	//End of AssignedState implementation
+
+
+	//InProgressState implementation
+
+	const InProgressState& InProgressState::instance()
+	{
+		static InProgressState instance;
+		return instance;
+	}
+
+	ItemStatus InProgressState::status() const
+	{
+		return ItemStatus::InProgress;
+	}
+
+	void InProgressState::complete(TaskItem& item, const Participant& actor, const Outcome& outcome) const
+	{
+		if (item.spec().requiresReview())
+		{
+			throw InvalidStateError("use submit(): this item requires review");
+		}
+
+		if (actor.id() != item.assignee())
+		{
+			throw PermissionDeniedError("complete() is only allowed by the assigned participant.");
+		}
+
+		Outcome edit = outcome;
+
+		if (!runWork(item, actor, edit))
+		{
+			return; // left in InProgress
+		}
+
+		recordResult(item, actor, edit);
+		moveTo(item, CompletedState::instance());
+		emit(item, EventType::ItemCompleted, actor.id(), edit, "Item completed by assigned participant.");
+	}
+
+	void InProgressState::submit(TaskItem& item, const Participant& actor, const Outcome& outcome) const
+	{
+		if (!item.spec().requiresReview())
+		{
+			throw InvalidStateError("use complete(): this item has no review step");
+		}
  
-        if (actor.id() != item.assignee())
-        {
-            throw PermissionDeniedError("submit() is only allowed by the assigned participant.");
-        }
+		if (actor.id() != item.assignee())
+		{
+			throw PermissionDeniedError("submit() is only allowed by the assigned participant.");
+		}
  
-        Outcome edit = outcome;
+		Outcome edit = outcome;
  
-        if (!runWork(item, actor, edit))
-        {
-            return; // left in InProgress
-        }
+		if (!runWork(item, actor, edit))
+		{
+			return; // left in InProgress
+		}
  
-        recordResult(item, actor, edit);
-        moveTo(item, UnderReviewState::instance());
-        emit(item, EventType::ItemSubmitted, actor.id(), edit, "Item submitted for review by assigned participant.");
-    }
+		recordResult(item, actor, edit);
+		moveTo(item, UnderReviewState::instance());
+		emit(item, EventType::ItemSubmitted, actor.id(), edit, "Item submitted for review by assigned participant.");
+	}
 
-    void InProgressState::escalate(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, EscalatedState::instance());
-        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
-    }
+	void InProgressState::escalate(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, EscalatedState::instance());
+		emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
+	}
 
-    void InProgressState::cancel(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, CancelledState::instance());
-        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
-    }
+	void InProgressState::cancel(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, CancelledState::instance());
+		emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+	}
 
-    void InProgressState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
-    {
-        recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
-        moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
-    }
+	void InProgressState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
+	{
+		recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
+		moveTo(item, CompletedState::instance());
+		emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
+	}
 
-    //End of InProgressState implementation
+	//End of InProgressState implementation
 
 
-    //UnderReviewState implementation
+	//UnderReviewState implementation
 
-    const UnderReviewState& UnderReviewState::instance()
-    {
-        static UnderReviewState instance;
-        return instance;
-    }
+	const UnderReviewState& UnderReviewState::instance()
+	{
+		static UnderReviewState instance;
+		return instance;
+	}
 
-    ItemStatus UnderReviewState::status() const
-    {
-        return ItemStatus::UnderReview;
-    }
+	ItemStatus UnderReviewState::status() const
+	{
+		return ItemStatus::UnderReview;
+	}
 
-    void UnderReviewState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
-    {
-        // routing branches on the outcome code, so a reviewer who gives no code of their own approves the code that was submitted
-        Outcome decided = outcome;
-        if (decided.code() == "")
-        {
-            decided = item.lastOutcome();
-        }
+	void UnderReviewState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
+	{
+		// routing branches on the outcome code, so a reviewer who gives no code of their own approves the code that was submitted
+		Outcome decided = outcome;
+		if (decided.code() == "")
+		{
+			decided = item.lastOutcome();
+		}
  
-        recordResult(item, reviewer, decided);
-        moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, reviewer.id(), decided, "Item approved and completed by reviewer.");
-    }
+		recordResult(item, reviewer, decided);
+		moveTo(item, CompletedState::instance());
+		emit(item, EventType::ItemCompleted, reviewer.id(), decided, "Item approved and completed by reviewer.");
+	}
 
-    void UnderReviewState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
-    {
-        unsigned rejectCount = bumpRejections(item);
-        if (rejectCount < item.spec().maxRetries())
-        {
-            moveTo(item, InProgressState::instance());
-            emit(item, EventType::ItemRejected, reviewer.id(), Outcome::rejected("REJECTED", reason), "Item rejected by reviewer. Returning to InProgress.");
-        }
-        else
-        {
-            moveTo(item, CancelledState::instance());
-            emit(item, EventType::ItemCancelled, reviewer.id(), Outcome::rejected("CANCELLED", reason), "Item rejected by reviewer. Max retries exceeded, item cancelled.");
-        }
-    }
+	void UnderReviewState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
+	{
+		unsigned rejectCount = bumpRejections(item);
+		if (rejectCount < item.spec().maxRetries())
+		{
+			moveTo(item, InProgressState::instance());
+			emit(item, EventType::ItemRejected, reviewer.id(), Outcome::rejected("REJECTED", reason), "Item rejected by reviewer. Returning to InProgress.");
+		}
+		else
+		{
+			moveTo(item, CancelledState::instance());
+			emit(item, EventType::ItemCancelled, reviewer.id(), Outcome::rejected("CANCELLED", reason), "Item rejected by reviewer. Max retries exceeded, item cancelled.");
+		}
+	}
 
-    void UnderReviewState::escalate(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, EscalatedState::instance());
-        emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
-    }
-    
-    void UnderReviewState::cancel(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, CancelledState::instance());
-        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
-    }
+	void UnderReviewState::escalate(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, EscalatedState::instance());
+		emit(item, EventType::ItemEscalated, "", Outcome::escalated("ESCALATED", reason), "Item escalated.", bumpEscalations(item));
+	}
+	
+	void UnderReviewState::cancel(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, CancelledState::instance());
+		emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+	}
 
-    void UnderReviewState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
-    {
-        recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
-        moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
-    }
+	void UnderReviewState::expire(TaskItem& item, const std::string& outcome_code, const std::string& reason) const
+	{
+		recordResult(item, system_actor() ,Outcome::rejected(outcome_code, reason));
+		moveTo(item, CompletedState::instance());
+		emit(item, EventType::ItemCompleted, "", Outcome::rejected(outcome_code, reason), "Item expired and completed.");
+	}
 
-    //End of UnderReviewState implementation
-
-
-    //EscalatedState implementation
-    const EscalatedState& EscalatedState::instance()
-    {
-        static EscalatedState instance;
-        return instance;
-    }
-
-    ItemStatus EscalatedState::status() const
-    {
-        return ItemStatus::Escalated;
-    }
-
-    void EscalatedState::assign(TaskItem& item, const Id& participant_id) const
-    {
-        setAssignee(item, participant_id);
-        emit(item, EventType::ItemAssigned, participant_id, Outcome(), "Escalation approver assigned to item.");
-    }
-
-    void EscalatedState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
-    {
-        Outcome edit = outcome;
-        
-        if (!runWork(item, reviewer, edit))
-        {
-            return; // left in Escalated
-        }
-        recordResult(item, reviewer, edit);
-        moveTo(item, CompletedState::instance());
-        emit(item, EventType::ItemCompleted, reviewer.id(), edit, "Item approved and completed by escalation approver.");
-    }
-
-    void EscalatedState::cancel(TaskItem& item, const std::string& reason) const
-    {
-        moveTo(item, CancelledState::instance());
-        emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
-    }
-
-    //End of EscalatedState implementation
+	//End of UnderReviewState implementation
 
 
-    //CompletedState implementation
+	//EscalatedState implementation
+	const EscalatedState& EscalatedState::instance()
+	{
+		static EscalatedState instance;
+		return instance;
+	}
 
-    const CompletedState& CompletedState::instance()
-    {
-        static CompletedState instance;
-        return instance;
-    }
+	ItemStatus EscalatedState::status() const
+	{
+		return ItemStatus::Escalated;
+	}
 
-    ItemStatus CompletedState::status() const
-    {
-        return ItemStatus::Completed;
-    }
+	void EscalatedState::assign(TaskItem& item, const Id& participant_id) const
+	{
+		setAssignee(item, participant_id);
+		emit(item, EventType::ItemAssigned, participant_id, Outcome(), "Escalation approver assigned to item.");
+	}
 
-    //End of CompletedState implementation
+	void EscalatedState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
+	{
+		Outcome edit = outcome;
+		
+		if (!runWork(item, reviewer, edit))
+		{
+			return; // left in Escalated
+		}
+		recordResult(item, reviewer, edit);
+		moveTo(item, CompletedState::instance());
+		emit(item, EventType::ItemCompleted, reviewer.id(), edit, "Item approved and completed by escalation approver.");
+	}
+
+	void EscalatedState::cancel(TaskItem& item, const std::string& reason) const
+	{
+		moveTo(item, CancelledState::instance());
+		emit(item, EventType::ItemCancelled, "", Outcome::rejected("CANCELLED", reason), "Item cancelled.");
+	}
+
+	//End of EscalatedState implementation
 
 
-    //CancelledState implementation
+	//CompletedState implementation
 
-    const CancelledState& CancelledState::instance()
-    {
-        static CancelledState instance;
-        return instance;
-    }
+	const CompletedState& CompletedState::instance()
+	{
+		static CompletedState instance;
+		return instance;
+	}
 
-    ItemStatus CancelledState::status() const
-    {
-        return ItemStatus::Cancelled;
-    }
+	ItemStatus CompletedState::status() const
+	{
+		return ItemStatus::Completed;
+	}
 
-    //End of CancelledState implmentation
+	//End of CompletedState implementation
 
 
-    //SkippedState implementation
+	//CancelledState implementation
 
-    const SkippedState& SkippedState::instance()
-    {
-        static SkippedState instance;
-        return instance;
-    }
+	const CancelledState& CancelledState::instance()
+	{
+		static CancelledState instance;
+		return instance;
+	}
 
-    ItemStatus SkippedState::status() const
-    {
-        return ItemStatus::Skipped;
-    }
+	ItemStatus CancelledState::status() const
+	{
+		return ItemStatus::Cancelled;
+	}
 
-    //End of SkippedState implementation
+	//End of CancelledState implmentation
+
+
+	//SkippedState implementation
+
+	const SkippedState& SkippedState::instance()
+	{
+		static SkippedState instance;
+		return instance;
+	}
+
+	ItemStatus SkippedState::status() const
+	{
+		return ItemStatus::Skipped;
+	}
+
+	//End of SkippedState implementation
 
 }
 
