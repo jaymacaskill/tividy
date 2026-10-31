@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 31 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -21,6 +21,9 @@ Last Modified: 31 October 2026
 
 #include "industries/telecom/TelecomPack.h"
 #include "industries/telecom/TelecomParts.h"
+#include "engine/policies/EscalationHandler.h"
+#include "engine/policies/AssignmentStrategy.h"
+#include "engine/connectors/ExternalConnector.h
 
 namespace tividy
 {
@@ -74,7 +77,7 @@ namespace tividy
         std::shared_ptr<const EscalationHandler> TelecomPack::createEscalationChain() const
         {
             auto compliance = std::make_shared<RoleEscalationHandler>("noc-manager", 2);
-            return std::make_shared<RoleEscalationHandler>("network-engineer", 1, compliance);
+            return std::make_shared<RoleEscalationHandler>("network-engineer", 1, noc);
         }
 
         ClientProfile TelecomPack::createProfile() const
