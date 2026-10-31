@@ -31,17 +31,21 @@ namespace tividy
 		class TaskReader : public WorkItemVisitor
 		{
 			public:
-				TaskReader() : task(nullptr) { }
-
+				TaskReader() : decided(false), task(nullptr) { }
+		
 				void visitTask(const TaskItem& t) override
 				{
-					if (task == nullptr) task = &t;
+					if (!decided) { decided = true; task = &t; }
 				}
-
-				void visitStage(const StageItem&) override { }
-
+		
+				void visitStage(const StageItem&) override
+				{
+					if (!decided) decided = true;   // a stage has no outcome of its own
+				}
+		
 				const TaskItem* found() const { return task; }
 			private:
+				bool decided;
 				const TaskItem* task;
 		};
 
@@ -198,7 +202,10 @@ namespace tividy
 				{
 					const Id id = policies.assignment->chooseParticipant(item, result.approver_role,
 						instance.context().directory(), instance.data());
-					if (!id.empty()) item.assign(id);
+					if (!id.empty())
+						item.assign(id);
+					else
+						publishNote(instance, item.spec().id(), "no participant found for role '" + result.approver_role + "' to take over " + item.spec().id());
 				}
 				else if (result.resolved) 
 				{
