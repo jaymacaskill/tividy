@@ -3,17 +3,17 @@
 
 namespace tividy
 {
-    void FlowController::assignIfPossible(WorkItem& item)
+    void FlowController::assignIfPossible(WorkItem &item)
     {
-        if (item.status() != ItemStatus::Available)
+        if (item.status() != ItemStatus::Available ||
+            !policies.assignment)
             return;
 
         const Id participant = policies.assignment->chooseParticipant(
             item,
             item.spec().requiredRole(),
             instance.context().directory(),
-            instance.data()
-        );
+            instance.data());
 
         if (!participant.empty())
             item.assign(participant);
@@ -24,8 +24,10 @@ namespace tividy
         const ItemStatus status = instance.root().status();
 
         if (status == ItemStatus::Completed)
-            instance.finish(InstanceStatus::Completed, "");
+            instance.finish(InstanceStatus::Completed,
+                            "All workflow items settled");
         else if (status == ItemStatus::Cancelled)
-            instance.finish(InstanceStatus::Failed, "");
+            instance.finish(InstanceStatus::Failed,
+                            "Workflow cancelled");
     }
 }
