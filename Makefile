@@ -168,6 +168,7 @@ $(BUILD_DIR)/tests/test_workflow_builder: $(BUILDER_TEST_OBJECTS)
 
 $(BUILD_DIR)/tests/test_facade_startup: $(FACADE_STARTUP_OBJECTS)
 	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(FACADE_STARTUP_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/test_work_item_state_defaults: $(STATE_DEFAULT_TEST_OBJECTS)
 	@mkdir -p $(dir $@)
@@ -203,8 +204,6 @@ FACADE_ACTIONS_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(FACADE_ACTIONS_SOU
 $(BUILD_DIR)/tests/test_facade_actions: $(FACADE_ACTIONS_OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $(FACADE_ACTIONS_OBJECTS) $(GTEST_LIBS)
-
-	$(CXX) $(CXXFLAGS) -o $@ $(FACADE_STARTUP_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
