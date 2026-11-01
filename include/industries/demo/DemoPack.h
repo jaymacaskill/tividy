@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 22 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -18,6 +18,9 @@ Last Modified: 22 October 2026
 
 #ifndef TIVIDY_DEMO_PACK_H
 #define TIVIDY_DEMO_PACK_H
+
+#include <memory>
+#include <vector>
 
 #include "engine/facade/IndustryPack.h"
 
@@ -39,8 +42,7 @@ namespace tividy
 		 * | finance_review  | ManualTask (Secure)                            | finance   |                              |
 		 * | consolidate     | ManualTask (Secure)                            | manager   | legal_review, finance_review |
 		 * | rework_draft    | ManualTask (Secure)                            | author    | consolidate                  |
-		 * | approve         | ManualTask (reviewRequired, reviewer director) | manager   | consolidate, rework_draft    |
-		 * | publish         | ManualTask                                     | publisher | approve                      |
+		 * | approve         | ManualTask (Secure, reviewRequired, reviewer director) | manager   | consolidate, rework_draft    |		 * | publish         | ManualTask                                     | publisher | approve                      |
 		 *
 		 * Routing: consolidate uses OutcomeTableRouting; default: skip [rework_draft]; "CHANGES_REQUIRED": activate [rework_draft].
 		 * Policies: assignment = pack.createAssignmentStrategy(); escalation = pack.createEscalationChain().
