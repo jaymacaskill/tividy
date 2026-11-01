@@ -9,6 +9,7 @@
 #include "engine/items/StageItem.h"
 #include "engine/items/TaskItem.h"
 #include "engine/items/WorkItem.h"
+#include "engine/items/WorkItemDecorator.h"
 #include "engine/items/WorkItemSpec.h"
 #include "engine/items/WorkItemVisitor.h"
 
@@ -16,7 +17,8 @@
 	Visitor:          WorkItemVisitor (visitTask, visitStage).
 	ConcreteVisitor:  ProgressVisitor, plus RecordingVisitor defined below to show that a new
 	                  operation over the tree needs no change to the item classes.
-	Elements:         WorkItem::accept(), implemented by TaskItem and StageItem.
+	Elements:         WorkItem::accept(), implemented by TaskItem and StageItem. Decorators (e.g. SecureWorkItem)
+	                  forward accept() to the wrapped item, so they are invisible to visitors.
 */
 
 namespace tividy
@@ -159,6 +161,35 @@ namespace tividy
 
 		EXPECT_EQ(recorder.visits().size(), 6u);
 		EXPECT_EQ(progress.total(), 4u);
+	}
+
+	TEST(VisitorPatternTest, SecureWrappedTaskIsVisitedAsTheTask)
+	{
+		SecureWorkItem secured(makeTask("a"));
+		RecordingVisitor visitor;
+		secured.accept(visitor);
+
+		// Exactly one visitTask for the wrapped task; the decorator adds no visit of its own.
+		ASSERT_EQ(visitor.visits().size(), 1u);
+		EXPECT_EQ(visitor.visits()[0], "task:a");
+	}
+
+	TEST(VisitorPatternTest, SecureWrappedTaskInsideTreeKeepsOrderAndRealStatus)
+	{
+		std::unique_ptr<StageItem> root = makeStage("root");
+		root->add(makeTask("a"));
+		root->add(std::unique_ptr<WorkItem>(new SecureWorkItem(makeTask("secured", ItemStatus::Completed))));
+		root->add(makeTask("d"));
+
+		RecordingVisitor recorder;
+		ProgressVisitor progress;
+		root->accept(recorder);
+		root->accept(progress);
+
+		const std::vector<std::string> expected = {"stage:root", "task:a", "task:secured", "task:d"};
+		EXPECT_EQ(recorder.visits(), expected);
+		EXPECT_EQ(progress.total(), 3u);
+		EXPECT_EQ(progress.count(ItemStatus::Completed), 1u);   // the status of the task behind the decorator
 	}
 
 	// --- ProgressVisitor (ConcreteVisitor) ---
