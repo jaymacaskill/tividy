@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
+Last Modified: 1 November 2026
 */
 
 #ifndef TIVIDY_TESTS_WORKFLOW_DEFINITION_VALIDATION_FIXTURES_H
@@ -83,7 +83,7 @@ NO_LIFECYCLE(StageItem)
 
 tividy::TaskItem::TaskItem(const WorkItemSpec& spec)
 	: spec_ref(spec), state(nullptr), context_ref(nullptr), rejections_ref(0),
-	  failures_ref(0), escalations_ref(0), irreversible_performed(false) {}
+	  failures_ref(0), escalations_ref(0), irreversible_performed(false), barrier_recorded(false) {}
 tividy::TaskItem::TaskItem(const TaskItem& other) : TaskItem(other.spec_ref) {}
 tividy::TaskItem::~TaskItem() {}
 const tividy::WorkItemSpec& tividy::TaskItem::spec() const { return spec_ref; }
