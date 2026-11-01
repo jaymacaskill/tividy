@@ -45,6 +45,33 @@ namespace tividy
 				bool performsIrreversibleWork() const override { return true; }
 		};
 
+		// Test double: on completion writes to the instance data, overwriting one key and adding another.
+		class DataWritingTask : public CloneableTask<DataWritingTask>
+		{
+			public:
+				explicit DataWritingTask(const WorkItemSpec& spec) : CloneableTask<DataWritingTask>(spec) { }
+			protected:
+				void performWork(const Participant&, Outcome&) override { }
+				void onCompleted(const Outcome&) override
+				{
+					context().data().set("decision", "approved");
+					context().data().set("approved_by", "u1");
+				}
+		};
+
+		std::size_t countEntries(const AuditLog& log, EventType type)
+		{
+			std::size_t count = 0;
+			for (const AuditEntry& entry : log.entries())
+			{
+				if (entry.type == type)
+				{
+					++count;
+				}
+			}
+			return count;
+		}
+
 		bool hasEntry(const AuditLog& log, EventType type)
 		{
 			for (const AuditEntry& entry : log.entries())
@@ -202,6 +229,49 @@ namespace tividy
 		EXPECT_EQ(item(*instance, "a").status(), ItemStatus::InProgress);
 		EXPECT_EQ(item(*instance, "b").status(), ItemStatus::Created);
 		EXPECT_TRUE(hasEntry(instance->audit(), EventType::ItemReverted));
+	}
+
+	TEST_F(CommandPatternTest, UndoingTheSameCommandTwiceFailsTheSecondTimeAndChangesNothing)
+	{
+		std::unique_ptr<WorkflowInstance> instance = startedInstance(twoStepFlow());
+		start(*instance, "a")->execute();
+		std::unique_ptr<Command> command = complete(*instance, "a");
+		ASSERT_TRUE(command->execute().success);
+
+		ASSERT_TRUE(command->undo().success);
+		const std::size_t entries_after_first_undo = instance->audit().entries().size();
+
+		CommandResult second = command->undo();
+
+		EXPECT_FALSE(second.success);
+		EXPECT_EQ(second.message.find("cannot undo: "), 0u) << second.message;
+		EXPECT_EQ(item(*instance, "a").status(), ItemStatus::InProgress);
+		EXPECT_EQ(item(*instance, "b").status(), ItemStatus::Created);
+		EXPECT_EQ(instance->audit().entries().size(), entries_after_first_undo);
+		EXPECT_EQ(countEntries(instance->audit(), EventType::ItemReverted), 1u);
+	}
+
+	TEST_F(CommandPatternTest, UndoRestoresWorkflowDataWrittenByTheTask)
+	{
+		std::unique_ptr<StageItem> root(new StageItem(WorkItemSpec("root", "Root")));
+		root->add(std::unique_ptr<WorkItem>(new DataWritingTask(WorkItemSpec("decide", "Decide").requireRole("clerk"))));
+		WorkflowData data;
+		data.set("decision", "pending");
+		std::unique_ptr<WorkflowInstance> instance(new WorkflowInstance("inst-1", "flow", 1, data,
+			std::unique_ptr<WorkItem>(root.release()), policies, services));
+		instance->start();
+		start(*instance, "decide")->execute();
+
+		std::unique_ptr<Command> command = complete(*instance, "decide");
+		ASSERT_TRUE(command->execute().success);
+		ASSERT_EQ(instance->data().get("decision"), "approved");
+		ASSERT_TRUE(instance->data().has("approved_by"));
+
+		ASSERT_TRUE(command->undo().success);
+
+		EXPECT_EQ(instance->data().get("decision"), "pending");   // overwritten value is put back
+		EXPECT_FALSE(instance->data().has("approved_by"));        // key the task added is gone
+		EXPECT_EQ(item(*instance, "decide").status(), ItemStatus::InProgress);
 	}
 
 	TEST_F(CommandPatternTest, IrreversibleCommandCannotBeUndone)
