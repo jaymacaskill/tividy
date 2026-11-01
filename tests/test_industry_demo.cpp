@@ -11,11 +11,19 @@ COS 214 (Software Modelling) TIVIDY
 Last Modified: 1 November 2026
 */
 
-#include <gtest/gtest.h>
-#include "industries/demo/DemoPack.h"
-#include "engine/definition/WorkflowBuilder.h"
-#include "engine/items/WorkItem.h"
 #include <memory>
+
+#include <gtest/gtest.h>
+
+#include "engine/connectors/ExternalConnector.h"
+#include "engine/core/Clock.h"
+#include "engine/core/Participant.h"
+#include "engine/core/WorkflowData.h"
+#include "engine/definition/WorkflowBuilder.h"
+#include "engine/definition/WorkflowDefinition.h"
+#include "engine/items/WorkItem.h"
+#include "engine/runtime/WorkflowInstance.h"
+#include "industries/demo/DemoPack.h"
 
 namespace tividy
 {
@@ -92,29 +100,24 @@ namespace tividy
 			auto director = pack->createDirector();
 			StandardWorkflowBuilder builder;
 			auto definition = director->build(builder);
-			
-			// Get the root and traverse down to check dependencies
-			const WorkItem& root = definition->root();
-			
-			// The root is the implicit top-level stage. 
-			// It should contain the "drafting" and "review" stages.
-			auto children = root.children();
-			ASSERT_EQ(children.size(), 2);
-
-			// Find the "review" stage
-			WorkItem* review_stage = root.find("review");
-			ASSERT_NE(review_stage, nullptr);
-
-			// Find "consolidate"
-			WorkItem* consolidate = root.find("consolidate");
+		
+			// the definition keeps its template private, so look at it through an instance (a deep clone of the template)
+			ManualClock clock{TimePoint()};
+			ParticipantDirectory directory;
+			ConnectorRegistry connectors;
+			Services services{clock, directory, connectors};
+			std::unique_ptr<WorkflowInstance> instance = definition->createInstance("inst-1", WorkflowData(), services);
+		
+			// the top level holds the "drafting" and "review" stages
+			ASSERT_EQ(instance->root().children().size(), 2u);
+		
+			ASSERT_NE(instance->findItem("review"), nullptr);
+		
+			WorkItem* consolidate = instance->findItem("consolidate");
 			ASSERT_NE(consolidate, nullptr);
-
-			// Verify dependencies
-			const auto& consolidate_deps = consolidate->spec().dependencies();
-			EXPECT_EQ(consolidate_deps.size(), 2);
-			
-			// Verify "approve" requires review
-			WorkItem* approve = root.find("approve");
+			EXPECT_EQ(consolidate->spec().dependencies().size(), 2u);
+		
+			WorkItem* approve = instance->findItem("approve");
 			ASSERT_NE(approve, nullptr);
 			EXPECT_TRUE(approve->spec().requiresReview());
 			EXPECT_EQ(approve->spec().reviewerRole(), "director");
