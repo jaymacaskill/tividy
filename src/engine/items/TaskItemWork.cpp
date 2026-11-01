@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -27,6 +27,7 @@ bool tividy::TaskItem::executeWork(const tividy::Participant& actor, tividy::Out
 {
 	tividy::WorkContext& runtime = context();
 	validateOutcome(outcome);
+	barrier_recorded = false;
 	try
 	{
 		performWork(actor, outcome);
@@ -46,11 +47,21 @@ bool tividy::TaskItem::executeWork(const tividy::Participant& actor, tividy::Out
 
 	if (performsIrreversibleWork())
 	{
-		runtime.markIrreversible();
-		irreversible_performed = true;
+		markIrreversibleEffect();
 	}
 	onCompleted(outcome);
 	return true;
+}
+
+void tividy::TaskItem::markIrreversibleEffect()
+{
+	if (barrier_recorded)
+	{
+		return;
+	}
+	context().markIrreversible();
+	irreversible_performed = true;
+	barrier_recorded = true;
 }
 
 std::unique_ptr<tividy::WorkItemMemento> tividy::TaskItem::createMemento() const
