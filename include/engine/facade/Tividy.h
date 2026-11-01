@@ -81,12 +81,14 @@ namespace tividy
 
 			/**
 			 * @brief Installs a pack. Steps, in order:
-			 *  1. store the pack (EngineError if its key is already installed);
-			 *  2. for each createParticipants(): directory.add;
-			 *  3. for each createConnectors(): connectors_ref.registerConnector;
-			 *  4. def = createDirector()->build(StandardWorkflowBuilder); library.add(key, def);
-			 *  5. store createProfile() under key().
-			 * Not transactional: if a step throws, earlier steps stay applied (tests use a fresh Tividy per case).
+			 *  1. reject a null pack or an already-installed key (EngineError);
+			 *  2. build its workflow definition with StandardWorkflowBuilder;
+			 *  3. add participants and connectors to the shared services;
+			 *     exact LoggingNotifier("notifier") defaults reuse one facade-owned notifier;
+			 *     all other duplicate connector names (including custom notifiers) are rejected;
+			 *  4. register the definition and client profile, then retain the pack.
+			 * A build failure registers nothing. Later failures are not transactional and may leave
+			 * collaborators or a definition registered; this is not a full rollback guarantee.
 			 */
 			void installPack(std::unique_ptr<IndustryPack> pack);
 
