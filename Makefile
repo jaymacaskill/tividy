@@ -7,7 +7,7 @@
 # Thabo Ngwabi (24742512)
 
 # COS 214 (Software Modelling) TIVIDY
-# Last Modified: 29 October 2026
+# Last Modified: 01 Novemeber 2026
 
 CXX      := g++
 CXXFLAGS := -std=c++11 -Wall -Wextra -g -Iinclude -MMD -MP
@@ -123,6 +123,27 @@ $(BUILD_DIR)/tests/test_workflow_builder: $(BUILDER_TEST_OBJECTS)
 $(BUILD_DIR)/tests/test_facade_startup: $(FACADE_STARTUP_OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $(FACADE_STARTUP_OBJECTS) $(GTEST_LIBS)
+
+# Facade run-time operations (TividyActions.cpp): explicit linkage, substitutes only for runtime classes not yet in the tree.
+FACADE_ACTIONS_SOURCES := tests/test_facade_actions.cpp \
+    src/engine/facade/Tividy.cpp src/engine/facade/TividyActions.cpp src/engine/facade/IndustryPack.cpp \
+    src/engine/commands/ActionHistory.cpp src/engine/commands/Command.cpp \
+    src/engine/definition/WorkflowBuilder.cpp src/engine/definition/WorkflowDirector.cpp \
+    src/engine/definition/WorkflowDefinition.cpp src/engine/definition/WorkflowDefinitionValidation.cpp \
+    src/engine/items/StageItem.cpp src/engine/items/WorkItem.cpp \
+    src/engine/items/WorkItemMemento.cpp src/engine/items/WorkItemIterator.cpp \
+    src/engine/items/WorkItemSpec.cpp src/engine/core/Clock.cpp \
+    src/engine/core/Types.cpp src/engine/core/Outcome.cpp src/engine/core/Participant.cpp \
+    src/engine/core/WorkflowData.cpp src/engine/events/Observer.cpp \
+    src/engine/events/WorkflowEvent.cpp src/engine/connectors/ExternalConnector.cpp \
+    src/engine/runtime/Observers.cpp src/engine/policies/AssignmentStrategy.cpp \
+    src/engine/policies/RoutingStrategy.cpp src/engine/policies/EscalationHandler.cpp \
+    src/ui/ClientProfile.cpp
+FACADE_ACTIONS_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(FACADE_ACTIONS_SOURCES))
+
+$(BUILD_DIR)/tests/test_facade_actions: $(FACADE_ACTIONS_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(FACADE_ACTIONS_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
