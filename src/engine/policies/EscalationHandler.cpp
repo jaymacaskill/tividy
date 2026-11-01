@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-EscalationHandler.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file EscalationHandler.cpp
+ * @brief Implements the Chain of Responsibility for escalation: each handler resolves a request at its level or passes it to its successor.
+ */
 
 #ifndef TIVIDY_POLICIES_ESCALATIONHANDLER_CPP
 #define TIVIDY_POLICIES_ESCALATIONHANDLER_CPP

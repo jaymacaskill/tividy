@@ -7,7 +7,7 @@
 # Thabo Ngwabi (24742512)
 
 # COS 214 (Software Modelling) TIVIDY
-# Last Modified: 24 October 2026
+# Last Modified: 29 October 2026
 
 CXX      := g++
 CXXFLAGS := -std=c++11 -Wall -Wextra -g -Iinclude -MMD -MP
@@ -26,6 +26,38 @@ APP_OBJECTS    := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(APP_SOURCES))
 TEST_OBJECTS   := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(TEST_SOURCES))
 
 TEST_BINARIES  := $(patsubst %.cpp,$(BUILD_DIR)/%,$(TEST_SOURCES))
+
+# Definition tests use the real core and validator with structural item fixtures.
+# Explicit object linkage keeps those fixtures separate from libtividy.a as real
+# item implementations are added in later phases.
+VALIDATION_TEST_SOURCES := tests/test_workflow_definition_validation.cpp \
+                           src/engine/definition/WorkflowDefinition.cpp \
+                           src/engine/definition/WorkflowDefinitionValidation.cpp \
+                           src/engine/items/WorkItemSpec.cpp \
+                           src/engine/core/Outcome.cpp \
+                           src/engine/core/Types.cpp \
+                           src/engine/policies/EscalationHandler.cpp
+VALIDATION_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(VALIDATION_TEST_SOURCES))
+
+# Isolated structural StageItem fixtures are confined to this builder test.
+# Explicit objects prevent collisions with real item implementations in libtividy.a.
+BUILDER_TEST_SOURCES := tests/test_workflow_builder.cpp \
+                         src/engine/definition/WorkflowBuilder.cpp \
+                         src/engine/definition/WorkflowDirector.cpp \
+                         src/engine/definition/WorkflowDefinition.cpp \
+                         src/engine/definition/WorkflowDefinitionValidation.cpp \
+                         src/engine/items/WorkItem.cpp \
+                         src/engine/items/WorkItemMemento.cpp \
+                         src/engine/items/WorkItemIterator.cpp \
+                         src/engine/items/WorkItemSpec.cpp \
+                         src/engine/core/Types.cpp \
+                         src/engine/core/Outcome.cpp \
+                         src/engine/core/Participant.cpp \
+                         src/engine/core/WorkflowData.cpp \
+                         src/engine/policies/AssignmentStrategy.cpp \
+                         src/engine/policies/RoutingStrategy.cpp \
+                         src/engine/policies/EscalationHandler.cpp
+BUILDER_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(BUILDER_TEST_SOURCES))
 
 GTEST_LIBS := -lgtest -lgtest_main -pthread
 
@@ -62,6 +94,14 @@ endif
 $(BUILD_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/tests/test_workflow_definition_validation: $(VALIDATION_TEST_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(VALIDATION_TEST_OBJECTS) $(GTEST_LIBS)
+
+$(BUILD_DIR)/tests/test_workflow_builder: $(BUILDER_TEST_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(BUILDER_TEST_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
