@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
-
-ClientProfile.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file ClientProfile.cpp
+ * @brief Implements ClientProfile: the default TIVIDY look and the term() lookup that turns engine words into a client's own vocabulary.
+ */
 
 #ifndef TIVIDY_UI_CLIENTPROFILE_CPP
 #define TIVIDY_UI_CLIENTPROFILE_CPP
