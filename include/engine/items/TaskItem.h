@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 23 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -38,7 +38,8 @@ namespace tividy
 	 *
 	 * ### Subclassing recipe (industry tasks)
 	 * Derive from CloneableTask<YourTask>, pass a WorkItemSpec to the base constructor, override performWork().
-	 * Never write clone() and never touch status yourself.
+	 * Never write clone() and never touch status yourself. After committing an external effect, call
+	 * markIrreversibleEffect() before any response validation that might throw.
 	 *
 	 * ### Template Method: executeWork(actor, outcome)  [private, non-virtual]
 	 *  1. @pre bound, else InvalidStateError.
@@ -48,7 +49,9 @@ namespace tividy
 	 *     If it throws ExternalFailure f: ++failures_ref; publish ItemFailed with count = failures_ref and
 	 *     Outcome::failed(f.retryable() ? "RETRYABLE" : "PERMANENT", f.what()); return false (status unchanged).
 	 *     Any other exception propagates unchanged.
-	 *  4. If performsIrreversibleWork(): context().markIrreversible() and remember it (isReversible() becomes false).
+	 *  4. If performsIrreversibleWork(): call markIrreversibleEffect() as a successful-work fallback.
+	 *     A subclass may call it earlier, immediately after an external commit. It records at most one barrier
+	 *     per execution attempt, including when subsequent work throws; isReversible() then stays false.
 	 *  5. onCompleted(outcome)          -- hook; default does nothing.
 	 *  6. return true. The calling state then records the result, moves to Completed and emits ItemCompleted.
 	 */
@@ -114,6 +117,12 @@ namespace tividy
 			/** @brief Hook: true if performWork() has effects that cannot be rolled back. Default false. */
 			virtual bool performsIrreversibleWork() const;
 
+			/** @brief Records an external effect immediately after it commits, before later work may throw.
+			 *  Idempotent within one executeWork() attempt; also used by its successful-work fallback.
+			 *  Neither failure nor snapshot restoration removes the recorded effect.
+			 *  @pre bound, else InvalidStateError. */
+			void markIrreversibleEffect();
+
 			/** @return the bound context. @throws InvalidStateError if unbound. */
 			WorkContext& context() const;
 
@@ -131,6 +140,7 @@ namespace tividy
 			unsigned failures_ref;
 			unsigned escalations_ref;
 			bool irreversible_performed;
+			bool barrier_recorded; /**< Barrier already recorded for the current execution attempt. */
 			Outcome last_outcome;
 			Id completed_by;
 	};
