@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
+Last Modified: 1 November 2026
 */
 
 #ifndef TIVIDY_TESTS_WORK_ITEM_STATE_DEFAULTS_FIXTURES_H
@@ -45,7 +45,7 @@ tividy::WorkItemVisitor::~WorkItemVisitor() {}
 tividy::TaskItem::TaskItem(const WorkItemSpec& spec)
 	: spec_ref(spec), state(nullptr), context_ref(nullptr), assignee_ref("initial-worker"),
 	  assigned_at(TimePoint(std::chrono::seconds(42))), rejections_ref(2), failures_ref(3),
-	  escalations_ref(4), irreversible_performed(false),
+	  escalations_ref(4), irreversible_performed(false), barrier_recorded(false),
 	  last_outcome(Outcome::rejected("INITIAL", "Original result")), completed_by("initial-reviewer") {}
 tividy::TaskItem::~TaskItem() {}
 const tividy::WorkItemSpec& tividy::TaskItem::spec() const { return spec_ref; }
