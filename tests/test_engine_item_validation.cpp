@@ -172,7 +172,7 @@ TEST(RequiredDataRuleTest, AcceptsAnEmptyRequiredKeyList)
     EXPECT_TRUE(rule.check(item, data, Outcome()).empty());
 }
 
-TEST(WorkItemValidationTest, RunsRulesInOrderAndStopsAtFirstFailure)
+TEST_P(WorkItemValidationTest, RunsRulesInOrderAndStopsAtFirstFailure)
 {
     auto item = makeItem({rule(1), rule(2, "first failure"), rule(3, "later failure")});
     startItem(*item, context);
@@ -185,7 +185,7 @@ TEST(WorkItemValidationTest, RunsRulesInOrderAndStopsAtFirstFailure)
     EXPECT_TRUE(observer.received.empty());
 }
 
-TEST(WorkItemValidationTest, PassingValidationForwardsActorAndOutcome)
+TEST_P(WorkItemValidationTest, PassingValidationForwardsActorAndOutcome)
 {
     data.set("document", "passport");
 
@@ -212,7 +212,7 @@ TEST(WorkItemValidationTest, PassingValidationForwardsActorAndOutcome)
     EXPECT_EQ(event.outcome().note(), outcome.note());
 }
 
-TEST(WorkItemValidationTest, AnEmptyRuleListStillForwards)
+TEST_P(WorkItemValidationTest, AnEmptyRuleListStillForwards)
 {
     auto item = makeItem({});
     startItem(*item, context);
@@ -224,7 +224,7 @@ TEST(WorkItemValidationTest, AnEmptyRuleListStillForwards)
     ASSERT_EQ(observer.received.size(), 1u);
 }
 
-TEST(WorkItemValidationTest, RequiredDataFailureLeavesStateUnchanged)
+TEST_P(WorkItemValidationTest, RequiredDataFailureLeavesStateUnchanged)
 {
     data.set("empty", "");
     data.set("unrelated", "keep this");
@@ -265,7 +265,7 @@ TEST(WorkItemValidationTest, RequiredDataFailureLeavesStateUnchanged)
     EXPECT_EQ(component->status(), expectedStatus());
 }
 
-TEST(WorkItemValidationTest, ClonePreservesRulesAndIndependentComponent)
+TEST_P(WorkItemValidationTest, ClonePreservesRulesAndIndependentComponent)
 {
     auto original = makeItem({rule(1), std::make_shared<RequiredDataRule>(std::vector<std::string>{"document"}), rule(3)});
 
@@ -312,4 +312,10 @@ TEST(WorkItemValidationTest, ClonePreservesRulesAndIndependentComponent)
     EXPECT_EQ(original->status(), ItemStatus::InProgress);
     EXPECT_EQ(data.get("document"), "original document");
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    CompletionAndSubmission,
+    WorkItemValidationTest,
+    ::testing::Bool());
+
 } // namespace tividy
