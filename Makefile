@@ -59,6 +59,23 @@ BUILDER_TEST_SOURCES := tests/test_workflow_builder.cpp \
                          src/engine/policies/EscalationHandler.cpp
 BUILDER_TEST_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(BUILDER_TEST_SOURCES))
 
+# PR #34 facade startup unit tests use explicit linkage to keep substitutes for
+# unpublished runtime/library collaborators out of every other test binary.
+FACADE_STARTUP_SOURCES := tests/test_facade_startup.cpp \
+    src/engine/facade/Tividy.cpp src/engine/facade/IndustryPack.cpp \
+    src/engine/definition/WorkflowBuilder.cpp src/engine/definition/WorkflowDirector.cpp \
+    src/engine/definition/WorkflowDefinition.cpp src/engine/definition/WorkflowDefinitionValidation.cpp \
+    src/engine/items/StageItem.cpp src/engine/items/WorkItem.cpp \
+    src/engine/items/WorkItemMemento.cpp src/engine/items/WorkItemIterator.cpp \
+    src/engine/items/WorkItemSpec.cpp src/engine/core/Clock.cpp \
+    src/engine/core/Types.cpp src/engine/core/Outcome.cpp src/engine/core/Participant.cpp \
+    src/engine/core/WorkflowData.cpp src/engine/events/Observer.cpp \
+    src/engine/events/WorkflowEvent.cpp src/engine/connectors/ExternalConnector.cpp \
+    src/engine/runtime/Observers.cpp src/engine/policies/AssignmentStrategy.cpp \
+    src/engine/policies/RoutingStrategy.cpp src/engine/policies/EscalationHandler.cpp \
+    src/ui/ClientProfile.cpp
+FACADE_STARTUP_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(FACADE_STARTUP_SOURCES))
+
 GTEST_LIBS := -lgtest -lgtest_main -pthread
 
 # --- Valgrind ---
@@ -102,6 +119,10 @@ $(BUILD_DIR)/tests/test_workflow_definition_validation: $(VALIDATION_TEST_OBJECT
 $(BUILD_DIR)/tests/test_workflow_builder: $(BUILDER_TEST_OBJECTS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -o $@ $(BUILDER_TEST_OBJECTS) $(GTEST_LIBS)
+
+$(BUILD_DIR)/tests/test_facade_startup: $(FACADE_STARTUP_OBJECTS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $(FACADE_STARTUP_OBJECTS) $(GTEST_LIBS)
 
 $(BUILD_DIR)/tests/%: $(BUILD_DIR)/tests/%.o $(LIB)
 	@mkdir -p $(dir $@)
