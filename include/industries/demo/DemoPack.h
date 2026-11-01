@@ -42,7 +42,8 @@ namespace tividy
 		 * | finance_review  | ManualTask (Secure)                            | finance   |                              |
 		 * | consolidate     | ManualTask (Secure)                            | manager   | legal_review, finance_review |
 		 * | rework_draft    | ManualTask (Secure)                            | author    | consolidate                  |
-		 * | approve         | ManualTask (Secure, reviewRequired, reviewer director) | manager   | consolidate, rework_draft    |		 * | publish         | ManualTask                                     | publisher | approve                      |
+		 * | approve         | ManualTask (Secure, reviewRequired, reviewer director) | manager   | consolidate, rework_draft    |
+		 * | publish         | ManualTask                                     | publisher | approve                      |
 		 *
 		 * Routing: consolidate uses OutcomeTableRouting; default: skip [rework_draft]; "CHANGES_REQUIRED": activate [rework_draft].
 		 * Policies: assignment = pack.createAssignmentStrategy(); escalation = pack.createEscalationChain().
