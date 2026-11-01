@@ -8,15 +8,18 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
-
-WorkflowDirector.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file WorkflowDirector.cpp
+ * @brief Implements WorkflowDirector (Builder pattern): build() resets a builder, lets the subclass construct() the steps, and returns the finished definition.
+ */
 
 #ifndef TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
 #define TIVIDY_DEFINITION_WORKFLOWDIRECTOR_CPP
 
-/** note: WorkflowDirector public interface is located within the WorkflowBuilder interface */
+/* note: WorkflowDirector public interface is located within the WorkflowBuilder interface */
 #include "engine/definition/WorkflowBuilder.h"
 
 namespace tividy
