@@ -107,7 +107,7 @@ namespace tividy
 			activate.params["service_ref"] = data.get("customer_ref");
 
 			callConnector(context(), "network-provisioning", activate);
-
+			markIrreversibleEffect();
 			data.set("service_status", "ACTIVE");
 		}
 

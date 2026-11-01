@@ -72,6 +72,7 @@ namespace tividy
 			if (failures() == 0) request.params["simulate_failures"] = data.getOr("simulate_failures", "0");
 
 			ConnectorResult result = callConnector(context(), "core-banking", request);
+			markIrreversibleEffect();
 			data.set("ledger_ref", requirePayload(result, "ledger_ref"));
 		}
 
@@ -98,6 +99,7 @@ namespace tividy
 			if (failures() == 0) request.params["simulate_failures"] = data.getOr("simulate_failures", "0");
 
 			ConnectorResult result = callConnector(context(), "card-scheme", request);
+			markIrreversibleEffect();
 			data.set("scheme_case", requirePayload(result, "scheme_case"));
 		}
 
@@ -172,7 +174,8 @@ namespace tividy
 			else request.operation = "reverse_credit";
 
 			callConnector(context(), "core-banking", request);
-
+			markIrreversibleEffect();
+			
 			if (winner == Winner::Customer) data.set("settlement", "CUSTOMER");
 			else data.set("settlement", "MERCHANT");
 		}
