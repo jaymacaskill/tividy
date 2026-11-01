@@ -50,6 +50,25 @@ namespace tividy
 			}
 		} // anonymous namespace
 
+		ServiceActivationDirector::ServiceActivationDirector(const IndustryPack& pack) :
+			pack(pack) { }
+
+		std::string ServiceActivationDirector::workflowName() const
+		{
+			return "service-activation";
+		}
+
+		unsigned ServiceActivationDirector::version() const
+		{
+			return 1;
+		}
+
+		std::string ServiceActivationDirector::description() const
+		{
+			return "New mobile or fibre service order: identity capture, an automatic credit check with a referral branch, "
+				   "a self-install versus technician fork, provisioning and customer confirmation.";
+		}
+
 		void ServiceActivationDirector::construct(WorkflowBuilder& builder) const
 		{
 			// policies first, they do not depend on the items. going through the pack means an overridden policy applies here too
