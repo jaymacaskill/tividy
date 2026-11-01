@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-Observers.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Observers.cpp
+ * @brief Implements the event observers: AuditLog and AuditObserver (a record of every event) and NotificationObserver (sends events to a connector).
+ */
 
 #ifndef TIVIDY_RUNTIME_OBSERVERS_CPP
 #define TIVIDY_RUNTIME_OBSERVERS_CPP
