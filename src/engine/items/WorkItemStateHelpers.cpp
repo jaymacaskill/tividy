@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 31 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -62,8 +62,13 @@ namespace tividy
 
 	void WorkItemState::recordResult(TaskItem& item, const Participant& actor, const Outcome& outcome)
 	{
-		item.last_outcome = outcome;
+		recordOutcome(item, outcome);
 		item.completed_by = actor.id();
+	}
+
+	void WorkItemState::recordOutcome(TaskItem& item, const Outcome& outcome)
+	{
+		item.last_outcome = outcome;
 	}
 
 	unsigned WorkItemState::bumpRejections(TaskItem& item)

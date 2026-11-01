@@ -8,6 +8,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -375,4 +376,117 @@ namespace tividy
                            "A.execute", "B.execute", "C.execute",
                            "B.undo", "A.undo"}));
     }
+    TEST(MacroCommandTest, UndoRetryDoesNotUndoSuccessfulChildTwice)
+    {
+        std::vector<std::string> log;
+        MacroCommand macro("Routine");
+        FakeCommand* a = new FakeCommand("A", log);
+        a->setUndoSucceeds(false);
+        macro.add(std::unique_ptr<Command>(a));
+        macro.add(std::unique_ptr<Command>(new FakeCommand("B", log)));
+
+        ASSERT_TRUE(macro.execute().success);
+        CommandResult failed = macro.undo();
+        ASSERT_FALSE(failed.success);
+        EXPECT_EQ(failed.message, "Routine undo failed at step 1: undo failed");
+        a->setUndoSucceeds(true);
+        EXPECT_TRUE(macro.undo().success);
+
+        EXPECT_EQ(log, (std::vector<std::string>{
+            "A.execute", "B.execute", "B.undo", "A.undo", "A.undo"}));
+        EXPECT_EQ(std::count(log.begin(), log.end(), "B.undo"), 1);
+        EXPECT_FALSE(macro.undo().success);
+        EXPECT_FALSE(macro.execute().success); // Children do not support re-execution.
+        EXPECT_EQ(std::count(log.begin(), log.end(), "B.undo"), 1);
+    }
+
+    TEST(MacroCommandTest, RepeatedUndoFailuresResumeAtTheFailedChild)
+    {
+        std::vector<std::string> log;
+        MacroCommand macro("Routine");
+        FakeCommand* a = new FakeCommand("A", log);
+        a->setUndoSucceeds(false);
+        macro.add(std::unique_ptr<Command>(a));
+        macro.add(std::unique_ptr<Command>(new FakeCommand("B", log)));
+        ASSERT_TRUE(macro.execute().success);
+
+        for (unsigned attempt = 0; attempt < 3; ++attempt)
+        {
+            CommandResult failed = macro.undo();
+            EXPECT_FALSE(failed.success);
+            EXPECT_EQ(failed.message, "Routine undo failed at step 1: undo failed");
+        }
+        EXPECT_EQ(std::count(log.begin(), log.end(), "B.undo"), 1);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "A.undo"), 3);
+        a->setUndoSucceeds(true);
+        EXPECT_TRUE(macro.undo().success);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "B.undo"), 1);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "A.undo"), 4);
+    }
+
+    TEST(MacroCommandTest, PartialUndoBlocksExecutionUntilRecoveryAndResetsProgress)
+    {
+        std::vector<std::string> log;
+        MacroCommand macro("Routine");
+        FakeCommand* a = new FakeCommand("A", log, true, true, true);
+        a->setUndoSucceeds(false);
+        macro.add(std::unique_ptr<Command>(a));
+        macro.add(std::unique_ptr<Command>(new FakeCommand("B", log, true, true, true)));
+        ASSERT_TRUE(macro.execute().success);
+        ASSERT_FALSE(macro.undo().success);
+
+        const std::vector<std::string> partial = log;
+        EXPECT_FALSE(macro.execute().success);
+        EXPECT_FALSE(macro.supportsRetry());
+        EXPECT_TRUE(macro.isReversible());
+        EXPECT_EQ(macro.describe(), "Routine [2 step(s)]\n  A\n  B");
+        EXPECT_EQ(log, partial);
+
+        a->setUndoSucceeds(true);
+        ASSERT_TRUE(macro.undo().success);
+        EXPECT_TRUE(macro.supportsRetry());
+        ASSERT_TRUE(macro.execute().success);
+        EXPECT_TRUE(macro.undo().success);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "A.execute"), 2);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "B.execute"), 2);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "A.undo"), 3);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "B.undo"), 2);
+    }
+
+    TEST(MacroCommandTest, NestedUndoRetriesPreserveProgressAtBothLevels)
+    {
+        std::vector<std::string> log;
+        std::unique_ptr<MacroCommand> inner(new MacroCommand("Inner"));
+        MacroCommand* inner_ref = inner.get();
+        FakeCommand* b = new FakeCommand("B", log, true, true, true);
+        b->setUndoSucceeds(false);
+        inner->add(std::unique_ptr<Command>(b));
+        inner->add(std::unique_ptr<Command>(new FakeCommand("C", log, true, true, true)));
+        MacroCommand outer("Outer");
+        outer.add(std::unique_ptr<Command>(new FakeCommand("A", log, true, true, true)));
+        outer.add(std::move(inner));
+        outer.add(std::unique_ptr<Command>(new FakeCommand("D", log, true, true, true)));
+        ASSERT_TRUE(outer.execute().success);
+
+        EXPECT_EQ(outer.undo().message,
+            "Outer undo failed at step 2: Inner undo failed at step 1: undo failed");
+        EXPECT_FALSE(outer.undo().success);
+        const std::vector<std::string> partial = log;
+        EXPECT_FALSE(outer.execute().success);
+        EXPECT_FALSE(inner_ref->execute().success);
+        EXPECT_FALSE(outer.supportsRetry());
+        EXPECT_EQ(log, partial);
+        b->setUndoSucceeds(true);
+        ASSERT_TRUE(outer.undo().success);
+        EXPECT_EQ(log, (std::vector<std::string>{
+            "A.execute", "B.execute", "C.execute", "D.execute",
+            "D.undo", "C.undo", "B.undo", "B.undo", "B.undo", "A.undo"}));
+        EXPECT_TRUE(outer.supportsRetry());
+
+        ASSERT_TRUE(outer.execute().success);
+        EXPECT_TRUE(outer.undo().success);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "C.undo"), 2);
+        EXPECT_EQ(std::count(log.begin(), log.end(), "D.undo"), 2);
+    }
+
 }
