@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 31 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -35,76 +35,6 @@ namespace tividy
 			return p;
 		}
 	} // anonymous namespace
-	
-
-	void WorkItemState::publish(TaskItem& /*item*/) const
-	{
-		std::string msg = "publish() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);
-	}
-
-	void WorkItemState::assign(TaskItem& /*item*/, const Id& /*participant_id*/) const
-	{
-		std::string msg = "assign() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);       
-	}
-
-	void WorkItemState::start(TaskItem& /*item*/, const Participant& /*actor*/) const
-	{
-		std::string msg = "start() is not allowed while " + toString(status());
-		throw InvalidStateError(msg); 
-	}
-
-	void WorkItemState::submit(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
-	{
-		std::string msg = "submit() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);        
-	}
-
-	void WorkItemState::complete(TaskItem& /*item*/, const Participant& /*actor*/, const Outcome& /*outcome*/) const
-	{
-		std::string msg = "complete() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);        
-	}
-
-	void WorkItemState::approve(TaskItem& /*item*/, const Participant& /*reviewer*/, const Outcome& /*outcome*/) const
-	{
-		std::string msg = "approve() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);         
-	}
-
-	void WorkItemState::reject(TaskItem& /*item*/, const Participant& /*reviewer*/, const std::string& /*reason*/) const
-	{
-		std::string msg = "reject() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);    
-	}
-
-	void WorkItemState::escalate(TaskItem& /*item*/, const std::string& /*reason*/) const
-	{
-		std::string msg = "escalate() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);   
-	}
-
-	void WorkItemState::cancel(TaskItem& /*item*/, const std::string& /*reason*/) const
-	{
-		std::string msg = "cancel() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);   
-	}
-
-	void WorkItemState::skip(TaskItem& /*item*/, const std::string& /*reason*/) const
-	{
-		std::string msg = "skip() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);   
-	}
-
-	void WorkItemState::expire(TaskItem& /*item*/, const std::string& /*outcome_code*/, const std::string& /*reason*/) const
-	{
-		std::string msg = "expire() is not allowed while " + toString(status());
-		throw InvalidStateError(msg);   
-	}
-	
-	WorkItemState::~WorkItemState() = default;
-
 
 	//CreatedState implementation
 	const CreatedState& CreatedState::instance()
@@ -261,7 +191,6 @@ namespace tividy
 		{
 			throw InvalidStateError("use complete(): this item has no review step");
 		}
- 
 		if (actor.id() != item.assignee())
 		{
 			throw PermissionDeniedError("submit() is only allowed by the assigned participant.");
@@ -274,7 +203,7 @@ namespace tividy
 			return; // left in InProgress
 		}
  
-		recordResult(item, actor, edit);
+		recordOutcome(item, edit);
 		moveTo(item, UnderReviewState::instance());
 		emit(item, EventType::ItemSubmitted, actor.id(), edit, "Item submitted for review by assigned participant.");
 	}
@@ -331,7 +260,7 @@ namespace tividy
 	void UnderReviewState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
 	{
 		unsigned rejectCount = bumpRejections(item);
-		if (rejectCount < item.spec().maxRetries())
+		if (rejectCount <= item.spec().maxRetries())
 		{
 			moveTo(item, InProgressState::instance());
 			emit(item, EventType::ItemRejected, reviewer.id(), Outcome::rejected("REJECTED", reason), "Item rejected by reviewer. Returning to InProgress.");
