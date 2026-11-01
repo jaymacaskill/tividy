@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
+Last Modified: 1 November 2026
 */
 
 /**
@@ -34,7 +34,8 @@ namespace tividy
 		  rejections_ref(0), 
 		  failures_ref(0), 
 		  escalations_ref(0), 
-		  irreversible_performed(false), 
+		  irreversible_performed(false),
+		  barrier_recorded(false),
 		  last_outcome() 
 	{
 	}
@@ -47,7 +48,8 @@ namespace tividy
 		  rejections_ref(0), 
 		  failures_ref(0), 
 		  escalations_ref(0), 
-		  irreversible_performed(false), 
+		  irreversible_performed(false),
+		  barrier_recorded(false),
 		  last_outcome() 
 	{
 	}
