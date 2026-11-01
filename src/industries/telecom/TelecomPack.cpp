@@ -23,7 +23,7 @@ Last Modified: 1 November 2026
 #include "industries/telecom/TelecomParts.h"
 #include "engine/policies/EscalationHandler.h"
 #include "engine/policies/AssignmentStrategy.h"
-#include "engine/connectors/ExternalConnector.h
+#include "engine/connectors/ExternalConnector.h"
 
 namespace tividy
 {
@@ -76,7 +76,7 @@ namespace tividy
 
         std::shared_ptr<const EscalationHandler> TelecomPack::createEscalationChain() const
         {
-            auto compliance = std::make_shared<RoleEscalationHandler>("noc-manager", 2);
+            auto noc = std::make_shared<RoleEscalationHandler>("noc-manager", 2);            
             return std::make_shared<RoleEscalationHandler>("network-engineer", 1, noc);
         }
 
