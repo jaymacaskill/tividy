@@ -56,6 +56,7 @@ namespace tividy
 
 			CommandResult execute() override;
 			CommandResult undo() override;
+			bool supportsRetry() const override { return true; }
 			bool isReversible() const override;
 			std::string describe() const override;   /**< "<actor display name> <verb()> '<item name>'" + detail(). */
 		protected:
