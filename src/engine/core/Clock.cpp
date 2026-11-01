@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 24 October 2026
-
-Clock.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Clock.cpp
+ * @brief Implements the Clock interface: SystemClock (real time) and ManualClock (simulated time for tests and the demo).
+ */
 
 #ifndef TIVIDY_CORE_CLOCK_CPP
 #define TIVIDY_CORE_CLOCK_CPP
