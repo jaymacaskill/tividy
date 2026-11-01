@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 24 October 2026
-
-Types.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Types.cpp
+ * @brief Implements the shared engine enums' helpers: status checks (settled, terminal) and toString() for statuses, outcomes and event types.
+ */
 
 #ifndef TIVIDY_CORE_TYPES_CPP
 #define TIVIDY_CORE_TYPES_CPP
