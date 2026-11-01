@@ -74,7 +74,7 @@ namespace
         }
     };
 
-    TEST(CommandFactoryTest, CreatesAllSevenCommands)
+    TEST_F(CommandFactoryTest, CreatesAllSevenCommands)
     {
         expectCreated<StartCommand>("start", "Tester started 'Task'");
         expectCreated<SubmitCommand>("submit", "Tester submitted 'Task' [DONE]");
@@ -85,7 +85,7 @@ namespace
         expectCreated<CancelCommand>("cancel", "Tester cancelled 'Task': Test reason");
     }
 
-    TEST(CommandFactoryTest, UnknownVerbsThrowNotFoundError)
+    TEST_F(CommandFactoryTest, UnknownVerbsThrowNotFoundError)
     {
         const CommandRequest req = request();
 
@@ -96,7 +96,7 @@ namespace
         }
     }
 
-    TEST(CommandFactoryTest, UnknownVerbHasExpectedErrorMessage)
+    TEST_F(CommandFactoryTest, UnknownVerbHasExpectedErrorMessage)
     {
         try
         {
@@ -109,7 +109,7 @@ namespace
         }
     }
 
-    TEST(CommandFactoryTest, RegistersCustomVerbAndForwardsRequest)
+    TEST_F(CommandFactoryTest, RegistersCustomVerbAndForwardsRequest)
     {
         const CommandRequest req = request();
         const CommandRequest* received = nullptr;
@@ -131,7 +131,7 @@ namespace
         EXPECT_EQ(command->describe(), req.text);
     }
 
-    TEST(CommandFactoryTest, RegistrationReplacesExistingVerb)
+    TEST_F(CommandFactoryTest, RegistrationReplacesExistingVerb)
     {
         // Replace a built-in creator.
         factory.registerVerb("start", [](const CommandRequest&) -> std::unique_ptr<Command>
@@ -149,7 +149,7 @@ namespace
         EXPECT_EQ(factory.verbs().size(), 7u);
     }
 
-    TEST(CommandFactoryTest, ListsExactlySevenSortedBuiltInVerbs)
+    TEST_F(CommandFactoryTest, ListsExactlySevenSortedBuiltInVerbs)
     {
         const std::vector<std::string> expected
         {
@@ -165,7 +165,7 @@ namespace
         EXPECT_EQ(factory.verbs(), expected);
     }
 
-    TEST(CommandFactoryTest, IncludesCustomVerbsInSortedOrder)
+    TEST_F(CommandFactoryTest, IncludesCustomVerbsInSortedOrder)
     {
         const CommandFactory::Creator creator = [](const CommandRequest&) -> std::unique_ptr<Command>
             {
