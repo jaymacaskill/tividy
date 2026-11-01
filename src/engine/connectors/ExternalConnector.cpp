@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-ExternalConnector.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file ExternalConnector.cpp
+ * @brief Implements the Adapter side of the engine: ConnectorResult, ConnectorRegistry and the LoggingNotifier connector.
+ */
 
 #ifndef TIVIDY_CONNECTORS_EXTERNALCONNECTOR_CPP
 #define TIVIDY_CONNECTORS_EXTERNALCONNECTOR_CPP
