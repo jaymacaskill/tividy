@@ -36,6 +36,7 @@ namespace tividy
         int alive = 0;
         int g_clones = 0;
         alignas(WorkContext) unsigned char context_storage[sizeof(WorkContext)];
+        alignas(WorkContext) unsigned char other_context_storage[sizeof(WorkContext)];
         alignas(WorkItemVisitor) unsigned char visitor_storage[sizeof(WorkItemVisitor)];
 
         class Probe : public WorkItem
@@ -43,7 +44,7 @@ namespace tividy
             public:
                 explicit Probe(const WorkItemSpec& spec)
                     : s(spec), st(ItemStatus::Created), assigned(TimePoint() + std::chrono::hours(7)), due(TimePoint() + std::chrono::hours(9)),
-                      reversible(true), found(0), visited(0), made(0), restored(0), bound(0) { ++alive; }
+                      reversible(true), found(0), visited(0), made(0), restored(0), bound(0), fail_bind(false) { ++alive; }
                 ~Probe() { --alive; }
 
                 const WorkItemSpec& spec() const { return s; }
@@ -81,7 +82,11 @@ namespace tividy
                 }
                 void restore(const WorkItemMemento& m) { restored = &m; }
                 bool isReversible() const { return reversible; }
-                void bind(WorkContext& c) { bound = &c; }
+                void bind(WorkContext& c)
+                {
+                    if (fail_bind || (bound != 0 && bound != &c)) throw InvalidStateError("probe is already bound to a different context");
+                    bound = &c;
+                }
 
                 WorkItemSpec s;
                 ItemStatus st;
@@ -97,6 +102,7 @@ namespace tividy
                 mutable WorkItemMemento* made;
                 const WorkItemMemento* restored;
                 WorkContext* bound;
+                bool fail_bind;
             private:
                 void log(const std::string& what) { g_log.push_back(s.id() + ":" + what); }
         };
@@ -301,6 +307,49 @@ namespace tividy
     TEST_F(DecoratorTest, ContextBeforeBindThrows)
     {
         EXPECT_THROW(deco.boundContext(), InvalidStateError);
+    }
+
+    // WorkItem::bind(): binding twice with a different context throws InvalidStateError. A refused bind must change nothing.
+
+    TEST_F(DecoratorTest, ARefusedRebindLeavesTheDecoratorAndItsComponentOnTheEarlierContext)
+    {
+        WorkContext& a = *reinterpret_cast<WorkContext*>(context_storage);
+        WorkContext& b = *reinterpret_cast<WorkContext*>(other_context_storage);
+        deco.bind(a);
+        EXPECT_THROW(deco.bind(b), InvalidStateError);
+        EXPECT_EQ(&deco.boundContext(), &a);
+        EXPECT_EQ(probe->bound, &a);
+    }
+
+    TEST_F(DecoratorTest, AFirstBindThatThrowsLeavesTheDecoratorUnbound)
+    {
+        WorkContext& a = *reinterpret_cast<WorkContext*>(context_storage);
+        probe->fail_bind = true;
+        EXPECT_THROW(deco.bind(a), InvalidStateError);
+        EXPECT_THROW(deco.boundContext(), InvalidStateError);
+        EXPECT_TRUE(probe->bound == 0);
+    }
+
+    TEST_F(DecoratorTest, BindingTheSameContextAgainIsHarmless)
+    {
+        WorkContext& a = *reinterpret_cast<WorkContext*>(context_storage);
+        deco.bind(a);
+        EXPECT_NO_THROW(deco.bind(a));
+        EXPECT_EQ(&deco.boundContext(), &a);
+    }
+
+    TEST(DecoratorStackTest, ARefusedRebindLeavesEveryDecoratorInTheStackOnTheEarlierContext)
+    {
+        WorkContext& a = *reinterpret_cast<WorkContext*>(context_storage);
+        WorkContext& b = *reinterpret_cast<WorkContext*>(other_context_storage);
+        Probe* probe = new Probe(plain());
+        PassThrough* inner = new PassThrough(std::unique_ptr<WorkItem>(probe));
+        PassThrough outer((std::unique_ptr<WorkItem>(inner)));
+        outer.bind(a);
+        EXPECT_THROW(outer.bind(b), InvalidStateError);
+        EXPECT_EQ(&outer.boundContext(), &a);
+        EXPECT_EQ(&inner->boundContext(), &a);
+        EXPECT_EQ(probe->bound, &a);
     }
 
     TEST_F(DecoratorTest, CloneWrapsAFreshCloneOfTheComponent)

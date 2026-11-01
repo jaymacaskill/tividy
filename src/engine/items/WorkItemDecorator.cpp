@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 31 October 2026
+Last Modified: 01 November 2026
 
 WorkItemDecorator.cpp
 */
@@ -30,7 +30,7 @@ WorkItemDecorator.cpp
 
 namespace tividy
 {
-	WorkItemDecorator::WorkItemDecorator(std::unique_ptr<WorkItem> wrapped) : component_ref(std::move(wrapped)), context_ref(0)
+	WorkItemDecorator::WorkItemDecorator(std::unique_ptr<WorkItem> wrapped) : component_ref(std::move(wrapped)), context_ref(nullptr)
 	{
 		if (!component_ref) throw InvalidDefinitionError("a decorator needs a work item to wrap");
 	}
@@ -162,8 +162,9 @@ namespace tividy
 
 	void WorkItemDecorator::bind(WorkContext& bound)
 	{
-		context_ref = &bound;
+		// Remember the context only once the component has accepted it, so a refused bind leaves both on the earlier one.
 		component().bind(bound);
+		context_ref = &bound;
 	}
 
 	WorkItem& WorkItemDecorator::component()
