@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 30 October 2026
-
-TelecomDirector.cpp
+Last Modified: 1 November 2026
 */
+
+/**
+ * @file TelecomDirector.cpp
+ * @brief Builder Director for the telecom "service-activation" workflow.
+ */
 
 #ifndef TIVIDY_TELECOM_TELECOMDIRECTOR_CPP
 #define TIVIDY_TELECOM_TELECOMDIRECTOR_CPP
