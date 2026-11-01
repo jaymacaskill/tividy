@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
-
-FlowControllerRouting.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file FlowControllerRouting.cpp
+ * @brief Implements the routing half of FlowController: applying a routing decision and releasing every item whose dependencies are met.
+ */
 
 #ifndef TIVIDY_RUNTIME_FLOWCONTROLLER_ROUTING_CPP
 #define TIVIDY_RUNTIME_FLOWCONTROLLER_ROUTING_CPP

@@ -65,7 +65,7 @@ namespace tividy
 	}
 
 	/** @brief Installs a pack and registers the products it provides.
-	 * @details Checks for a null or duplicate pack, stores the pack, then adds its participants,
+	 * @details Checks for a null or duplicate pack, builds its definition, then adds its participants,
 	 * connectors, built workflow definition and client profile. The operation leaves nothing installed
 	 * if a failure occurs while building, but a failure while adding participants or connectors
 	 * may still leave those behind
@@ -83,23 +83,22 @@ namespace tividy
 
 		IndustryPack *installed = pack.get();
 
-		// adjusted to make it such that the most likely to throw happen first
+		// Build before registering collaborators so a build failure leaves them untouched.
 		StandardWorkflowBuilder builder;
 		auto director = installed->createDirector();
 		auto definition = director->build(builder);
-	
+
 		for (const auto &participant : installed->createParticipants())
 			directory.add(participant);
-	
+
 		auto new_connectors = installed->createConnectors();
 		for (auto &connector : new_connectors)
 			connectors_ref.registerConnector(std::move(connector));
-	
+
 		library.add(key, std::move(definition));
 		profiles[key] = installed->createProfile();
-	
-		packs.emplace(key, std::move(pack)); // and a fully installed pack only is recorded
-		// 
+
+		packs.emplace(key, std::move(pack)); // Record the pack only after installation succeeds.
 	}
 
 	/** @brief Creates, records and starts a workflow instance, then returns its generated id.
