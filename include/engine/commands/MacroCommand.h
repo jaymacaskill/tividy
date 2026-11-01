@@ -38,8 +38,10 @@ namespace tividy
 	 *     and allow another execution only if rollback succeeded and every attempted child supports retry.
 	 *  3. If all succeed return ok("<name>: n step(s) done"). An empty macro succeeds with "0 step(s)".
 	 * ### undo(): undoes children in reverse order. Requires isReversible().
+	 * Successful child undos are retained; a retry resumes at the failed child.
+	 * The macro remains executed until all child undos succeed.
 	 * ### isReversible(): true iff every child is reversible.
-	 * ### supportsRetry(): true iff every child supports retry after failure or successful undo.
+	 * ### supportsRetry(): true iff every child supports retry after failure or successful undo; false during partial undo.
 	 * ### describe(): "<name> [n step(s)]" then one indented line per child.
 	 */
 	class MacroCommand : public Command
@@ -61,6 +63,7 @@ namespace tividy
 			std::string name;
 			std::vector<std::unique_ptr<Command> > children;
 			std::size_t executed_count;
+			std::size_t undone_count; /**< Successfully undone suffix of a successful execution. */
 			bool executed;
 			bool started;
 			bool retry_allowed;
