@@ -191,7 +191,6 @@ namespace tividy
 		{
 			throw InvalidStateError("use complete(): this item has no review step");
 		}
-
 		if (actor.id() != item.assignee())
 		{
 			throw PermissionDeniedError("submit() is only allowed by the assigned participant.");
@@ -246,7 +245,6 @@ namespace tividy
 
 	void UnderReviewState::approve(TaskItem& item, const Participant& reviewer, const Outcome& outcome) const
 	{
-
 		// routing branches on the outcome code, so a reviewer who gives no code of their own approves the code that was submitted
 		Outcome decided = outcome;
 		if (decided.code() == "")

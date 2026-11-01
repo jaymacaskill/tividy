@@ -8,10 +8,14 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 24 October 2026
-
-Participant.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Participant.cpp
+ * @brief Implements Participant (a person or system with roles) and ParticipantDirectory (look up participants by id or role).
+ */
+
 
 #ifndef TIVIDY_CORE_PARTICIPANT_CPP
 #define TIVIDY_CORE_PARTICIPANT_CPP
