@@ -84,6 +84,8 @@ namespace tividy
 			 *  1. reject a null pack or an already-installed key (EngineError);
 			 *  2. build its workflow definition with StandardWorkflowBuilder;
 			 *  3. add participants and connectors to the shared services;
+			 *     exact LoggingNotifier("notifier") defaults reuse one facade-owned notifier;
+			 *     all other duplicate connector names (including custom notifiers) are rejected;
 			 *  4. register the definition and client profile, then retain the pack.
 			 * A build failure registers nothing. Later failures are not transactional and may leave
 			 * collaborators or a definition registered; this is not a full rollback guarantee.

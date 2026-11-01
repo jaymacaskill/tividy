@@ -43,8 +43,9 @@ private:
 };
 class StartupDirector : public WorkflowDirector {
 public:
-    explicit StartupDirector(bool fail = false) : fail(fail) {}
-    std::string workflowName() const override { return "startup-test"; }
+    explicit StartupDirector(bool fail = false, const std::string& workflow_name = "startup-test")
+        : fail(fail), workflow_name(workflow_name) {}
+    std::string workflowName() const override { return workflow_name; }
     unsigned version() const override { return 3; }
     std::string description() const override { return "Facade startup contract"; }
     void construct(WorkflowBuilder& builder) const override {
@@ -53,6 +54,7 @@ public:
     }
 private:
     bool fail;
+    std::string workflow_name;
 };
 struct PackProbe { unsigned directors = 0; LoggingNotifier* notifier = nullptr; };
 class StartupPack : public IndustryPack {
@@ -81,6 +83,48 @@ public:
 private:
     std::shared_ptr<PackProbe> probe;
     bool fail;
+};
+// Representative providers: the real Demo/Banking/Telecom implementations are
+// not linked by this isolated facade test. Use the real default factory and
+// real registry/notifier/observer, with distinct industry connector fixtures.
+class IndustryConnector : public ExternalConnector {
+public:
+    explicit IndustryConnector(const std::string& key) : key(key) {}
+    std::string name() const override { return key; }
+    ConnectorResult invoke(const ConnectorRequest&) override { return ConnectorResult::ok(key); }
+private:
+    std::string key;
+};
+class CustomNotifier : public LoggingNotifier {
+public:
+    ConnectorResult invoke(const ConnectorRequest&) override {
+        return ConnectorResult::ok("custom notification delivery");
+    }
+};
+class ConnectorPack : public IndustryPack {
+public:
+    ConnectorPack(const std::string& key, const std::vector<std::string>& connectors = {},
+                  bool custom_notifier = false)
+        : key_ref(key), connector_names(connectors), custom_notifier(custom_notifier) {}
+    std::string key() const override { return key_ref; }
+    std::string displayName() const override { return key_ref; }
+    std::unique_ptr<WorkflowDirector> createDirector() const override {
+        return std::unique_ptr<WorkflowDirector>(new StartupDirector(false, key_ref + "-workflow"));
+    }
+    std::vector<std::unique_ptr<ExternalConnector> > createConnectors() const override {
+        std::vector<std::unique_ptr<ExternalConnector> > result;
+        if (custom_notifier)
+            result.emplace_back(new CustomNotifier);
+        else
+            result = IndustryPack::createConnectors();
+        for (const auto& name : connector_names)
+            result.emplace_back(new IndustryConnector(name));
+        return result;
+    }
+private:
+    std::string key_ref;
+    std::vector<std::string> connector_names;
+    bool custom_notifier;
 };
 class FacadeStartupTest : public ::testing::Test {
 protected:
@@ -150,5 +194,85 @@ TEST_F(FacadeStartupTest, StoresSeparateInstancesAndPreservesCreationOrder) {
     EXPECT_EQ(input.get("owner"), "original");
     const Tividy& readOnly = engine;
     EXPECT_EQ(&readOnly.instance(second), &engine.instance(second));
+}
+TEST_F(FacadeStartupTest, DemoBankingTelecomFixturesShareOneWorkingDefaultNotifier) {
+    engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("demo")));
+    const Id demo = engine.startWorkflow("demo-workflow", WorkflowData());
+    ConnectorRegistry& registry = engine.instance(demo).context().connectors();
+    LoggingNotifier* shared = dynamic_cast<LoggingNotifier*>(&registry.require("notifier"));
+    ASSERT_NE(shared, nullptr);
+    engine.instance(demo).events().notify(WorkflowEvent(EventType::ItemAssigned, demo, "task", TimePoint())
+        .byActor(demo).withMessage("shared delivery"));
+
+    ASSERT_NO_THROW(engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("banking"))));
+    ASSERT_NO_THROW(engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("telecom"))));
+    EXPECT_EQ(&registry.require("notifier"), shared);
+    EXPECT_EQ(engine.packKeys(), std::vector<std::string>({"banking", "demo", "telecom"}));
+    const Id banking = engine.startWorkflow("banking-workflow", WorkflowData());
+    const Id telecom = engine.startWorkflow("telecom-workflow", WorkflowData());
+    for (const Id& id : {banking, telecom}) {
+        WorkflowInstance& instance = engine.instance(id);
+        EXPECT_EQ(&instance.context().connectors().require("notifier"), shared);
+        instance.events().notify(WorkflowEvent(EventType::ItemAssigned, id, "task", TimePoint())
+            .byActor(id).withMessage("shared delivery"));
+    }
+    ASSERT_EQ(shared->sent().size(), 3u);
+    for (const auto& line : shared->sent())
+        EXPECT_NE(line.find("ItemAssigned | shared delivery"), std::string::npos);
+}
+TEST_F(FacadeStartupTest, SharedNotifierDoesNotPreventDistinctIndustryConnectorRegistration) {
+    engine.installPack(std::unique_ptr<IndustryPack>(
+        new ConnectorPack("banking", {"core-banking", "card-scheme"})));
+    ASSERT_NO_THROW(engine.installPack(std::unique_ptr<IndustryPack>(
+        new ConnectorPack("telecom", {"credit-bureau", "network-provisioning"}))));
+    const Id id = engine.startWorkflow("banking-workflow", WorkflowData());
+    ConnectorRegistry& registry = engine.instance(id).context().connectors();
+    for (const std::string& key : {"core-banking", "card-scheme", "credit-bureau", "network-provisioning"}) {
+        ASSERT_TRUE(registry.has(key));
+        EXPECT_EQ(registry.require(key).invoke(ConnectorRequest()).message, key);
+    }
+}
+TEST_F(FacadeStartupTest, RejectsGenuinelyConflictingIndustryConnectorNames) {
+    engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("first", {"industry-api"})));
+    const Id id = engine.startWorkflow("first-workflow", WorkflowData());
+    ConnectorRegistry& registry = engine.instance(id).context().connectors();
+    ExternalConnector* original = &registry.require("industry-api");
+    try {
+        engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("second", {"industry-api"})));
+        FAIL() << "Expected a connector conflict";
+    } catch (const EngineError& error) {
+        EXPECT_EQ(std::string(error.what()), "Connector industry-api already present in this registry");
+    }
+    EXPECT_EQ(&registry.require("industry-api"), original);
+    EXPECT_EQ(engine.packKeys(), std::vector<std::string>({"first"}));
+    EXPECT_EQ(engine.workflowNames(), std::vector<std::string>({"first-workflow"}));
+}
+TEST_F(FacadeStartupTest, RejectsCustomNotifierCollisionWithDefaultNotifier) {
+    engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("default")));
+    const Id id = engine.startWorkflow("default-workflow", WorkflowData());
+    ConnectorRegistry& registry = engine.instance(id).context().connectors();
+    ExternalConnector* original = &registry.require("notifier");
+    EXPECT_THROW(engine.installPack(std::unique_ptr<IndustryPack>(
+        new ConnectorPack("custom", {}, true))), EngineError);
+    EXPECT_EQ(&registry.require("notifier"), original);
+    EXPECT_EQ(engine.packKeys(), std::vector<std::string>({"default"}));
+}
+TEST_F(FacadeStartupTest, PreservesSingleCustomNotifierAndRejectsConflictingDefault) {
+    engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("custom", {}, true)));
+    const Id id = engine.startWorkflow("custom-workflow", WorkflowData());
+    ConnectorRegistry& registry = engine.instance(id).context().connectors();
+    ExternalConnector* original = &registry.require("notifier");
+    EXPECT_EQ(original->invoke(ConnectorRequest()).message, "custom notification delivery");
+    EXPECT_THROW(engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("default"))), EngineError);
+    EXPECT_EQ(&registry.require("notifier"), original);
+    EXPECT_EQ(engine.packKeys(), std::vector<std::string>({"custom"}));
+}
+TEST_F(FacadeStartupTest, RegistryStillRejectsDirectDefaultNotifierDuplicates) {
+    engine.installPack(std::unique_ptr<IndustryPack>(new ConnectorPack("default")));
+    const Id id = engine.startWorkflow("default-workflow", WorkflowData());
+    ConnectorRegistry& registry = engine.instance(id).context().connectors();
+    ExternalConnector* original = &registry.require("notifier");
+    EXPECT_THROW(registry.registerConnector(std::unique_ptr<ExternalConnector>(new LoggingNotifier)), EngineError);
+    EXPECT_EQ(&registry.require("notifier"), original);
 }
 } } // namespace tividy

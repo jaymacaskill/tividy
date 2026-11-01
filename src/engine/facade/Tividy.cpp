@@ -5,6 +5,7 @@
 #include "engine/facade/Tividy.h"
 #include "engine/core/Errors.h"
 #include <stdexcept>
+#include <typeinfo>
 #include <utility>
 
 namespace tividy
@@ -66,7 +67,9 @@ namespace tividy
 
 	/** @brief Installs a pack and registers the products it provides.
 	 * @details Checks for a null or duplicate pack, builds its definition, then adds its participants,
-	 * connectors, built workflow definition and client profile. The operation leaves nothing installed
+	 * connectors, built workflow definition and client profile. Exact default LoggingNotifier products
+	 * named "notifier" share the first instance owned by this facade; other duplicate connectors are rejected.
+	 * The operation leaves nothing installed
 	 * if a failure occurs while building, but a failure while adding participants or connectors
 	 * may still leave those behind
 	 * @throws EngineError if @p pack is null or its key is already installed. */
@@ -93,7 +96,18 @@ namespace tividy
 
 		auto new_connectors = installed->createConnectors();
 		for (auto &connector : new_connectors)
+		{
+			// Only the unmodified engine default is a shared service. A subclass
+			// may deliver elsewhere, so even a LoggingNotifier subclass must
+			// retain the registry's normal duplicate-name protection.
+			const std::string connector_name = connector->name();
+			if (connector_name == "notifier" && typeid(*connector) == typeid(LoggingNotifier)
+				&& connectors_ref.has(connector_name)
+				&& typeid(connectors_ref.require(connector_name)) == typeid(LoggingNotifier))
+				continue;
+
 			connectors_ref.registerConnector(std::move(connector));
+		}
 
 		library.add(key, std::move(definition));
 		profiles[key] = installed->createProfile();
