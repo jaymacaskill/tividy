@@ -29,6 +29,7 @@ namespace tividy
 	MacroCommand::MacroCommand(const std::string &name)
 		: name(name),
 		  executed_count(0),
+		  undone_count(0),
 		  executed(false),
 		  started(false),
 		  retry_allowed(false)
@@ -66,6 +67,7 @@ namespace tividy
 		executed = true;
 		started = true;
 		executed_count = 0;
+		undone_count = 0;
 
 		for (std::size_t i = 0; i < children.size(); ++i)
 		{
@@ -146,8 +148,8 @@ namespace tividy
 			return CommandResult::failure(
 				"Macro contains irreversible commands");
 
-		// Undo successful commands in reverse order.
-		for (std::size_t i = executed_count; i > 0; --i)
+		// Resume before the suffix already undone by earlier calls.
+		for (std::size_t i = executed_count - undone_count; i > 0; --i)
 		{
 			CommandResult result = children[i - 1]->undo();
 
@@ -156,9 +158,12 @@ namespace tividy
 					name + " undo failed at step " +
 					std::to_string(i) +
 					": " + result.message);
+
+			++undone_count;
 		}
 
 		executed_count = 0;
+		undone_count = 0;
 
 		// Evaluate retry capability before clearing executed.
 		retry_allowed = supportsRetry();
@@ -180,6 +185,10 @@ namespace tividy
 
 	bool MacroCommand::supportsRetry() const
 	{
+		// Re-execution is unsafe while only a suffix has been undone.
+		if (undone_count != 0)
+			return false;
+
 		// Prevent retry after unsafe failure or incomplete rollback.
 		// This also protects parent macros containing this macro.
 		if (started && !executed && !retry_allowed)
