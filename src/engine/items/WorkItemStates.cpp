@@ -199,7 +199,7 @@ namespace tividy
             return; // left in InProgress
         }
  
-        recordResult(item, actor, edit);
+        recordOutcome(item, edit);
         moveTo(item, UnderReviewState::instance());
         emit(item, EventType::ItemSubmitted, actor.id(), edit, "Item submitted for review by assigned participant.");
     }

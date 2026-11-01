@@ -111,6 +111,9 @@ namespace tividy
 			/** Remembers the last outcome and who finished the item. */
 			static void recordResult(TaskItem& item, const Participant& actor, const Outcome& outcome);
 
+			/** Saves the outcome without recording completion. */
+			static void recordOutcome(TaskItem& item, const Outcome& outcome);
+
 			/** Increments and returns the item's reject / escalation counter. */
 			static unsigned bumpRejections(TaskItem& item);
 			static unsigned bumpEscalations(TaskItem& item);

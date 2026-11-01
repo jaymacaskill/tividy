@@ -57,8 +57,13 @@ namespace tividy
 
     void WorkItemState::recordResult(TaskItem& item, const Participant& actor, const Outcome& outcome)
     {
-        item.last_outcome = outcome;
+        recordOutcome(item, outcome);
         item.completed_by = actor.id();
+    }
+
+    void WorkItemState::recordOutcome(TaskItem& item, const Outcome& outcome)
+    {
+        item.last_outcome = outcome;
     }
 
     unsigned WorkItemState::bumpRejections(TaskItem& item)
