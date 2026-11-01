@@ -77,6 +77,7 @@ namespace tividy
 			CommandResult execute() override;
 			CommandResult undo() override;
 			bool isReversible() const override;
+			bool supportsRetry() const override;
 			std::string describe() const override;
 		protected:
 			Command& inner();
