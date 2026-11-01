@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-WorkItemSpec.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file WorkItemSpec.cpp
+ * @brief Implements WorkItemSpec, the fluent description of one work item: its id, roles, dependencies, deadline, review and retry rules.
+ */
 
 #ifndef TIVIDY_ITEMS_WORKITEMSPEC_CPP
 #define TIVIDY_ITEMS_WORKITEMSPEC_CPP
