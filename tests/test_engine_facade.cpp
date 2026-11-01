@@ -23,19 +23,19 @@ namespace tividy
         };
     }
 
-    TEST(FacadeTest, StartsWithEmptyRegistries)
+    TEST_F(FacadeTest, StartsWithEmptyRegistries)
     {
         EXPECT_TRUE(engine.packKeys().empty());
         EXPECT_TRUE(engine.workflowNames().empty());
         EXPECT_TRUE(engine.instanceIds().empty());
     }
 
-    TEST(FacadeTest, UsesProvidedClock)
+    TEST_F(FacadeTest, UsesProvidedClock)
     {
         EXPECT_EQ(engine.now(), TimePoint());
     }
 
-    TEST(FacadeTest, AdvanceTimeMovesClock)
+    TEST_F(FacadeTest, AdvanceTimeMovesClock)
     {
         // No instances means no missed deadlines.
         EXPECT_EQ(engine.advanceTime(60), 0u);
@@ -43,19 +43,19 @@ namespace tividy
                   TimePoint() + std::chrono::seconds(60));
     }
 
-    TEST(FacadeTest, ZeroAdvanceKeepsTimeUnchanged)
+    TEST_F(FacadeTest, ZeroAdvanceKeepsTimeUnchanged)
     {
         EXPECT_EQ(engine.advanceTime(0), 0u);
         EXPECT_EQ(engine.now(), TimePoint());
     }
 
-    TEST(FacadeTest, NegativeAdvanceThrows)
+    TEST_F(FacadeTest, NegativeAdvanceThrows)
     {
         EXPECT_THROW(engine.advanceTime(-1), EngineError);
         EXPECT_EQ(engine.now(), TimePoint());
     }
 
-    TEST(FacadeTest, UnknownLookupsThrowNotFound)
+    TEST_F(FacadeTest, UnknownLookupsThrowNotFound)
     {
         EXPECT_THROW(engine.profile("missing"), NotFoundError);
         EXPECT_THROW(engine.packOf("missing"), NotFoundError);
@@ -68,7 +68,7 @@ namespace tividy
         EXPECT_THROW(readOnly.instance("missing"), NotFoundError);
     }
 
-    TEST(FacadeTest, StartingUnknownWorkflowThrows)
+    TEST_F(FacadeTest, StartingUnknownWorkflowThrows)
     {
         WorkflowData data;
 
@@ -79,7 +79,7 @@ namespace tividy
         EXPECT_TRUE(engine.instanceIds().empty());
     }
 
-    TEST(FacadeTest, PerformOnUnknownInstanceReturnsFailure)
+    TEST_F(FacadeTest, PerformOnUnknownInstanceReturnsFailure)
     {
         CommandResult result =
             engine.perform("complete", "missing", "task", "actor");
@@ -87,7 +87,7 @@ namespace tividy
         EXPECT_FALSE(result.success);
     }
 
-    TEST(FacadeTest, UndoOnUnknownInstanceReturnsFailure)
+    TEST_F(FacadeTest, UndoOnUnknownInstanceReturnsFailure)
     {
         EXPECT_FALSE(engine.undo("missing").success);
     }
