@@ -1,8 +1,8 @@
 /** @file WorkItemVisitor.cpp
- * @brief Phase 1 Role C Visitor construction/query support; aggregation remains personal TDD work.
+ * @brief Read-only task status aggregation for workflow progress.
  */
 #include "engine/items/WorkItemVisitor.h"
-#include <stdexcept>
+#include "engine/items/TaskItem.h"
 
 namespace tividy
 {
@@ -18,15 +18,18 @@ namespace tividy
 	/** @brief Stages are intentionally ignored by the documented leaf-only progress metric. */
 	void ProgressVisitor::visitStage(const StageItem&) {}
 
-	/** @brief Will aggregate the real TaskItem status. No counter is modified by this scaffold. */
-	void ProgressVisitor::visitTask(const TaskItem&)
+	/** @brief Record one task using its observable status. */
+	void ProgressVisitor::visitTask(const TaskItem& task)
 	{
-		throw std::logic_error("ProgressVisitor::visitTask awaits Connor's aggregation implementation");
+		++counts[task.status()];
+		++total_ref;
 	}
 
-	/** @brief Will report the documented settled percentage, including the empty-tree boundary. */
+	/** @brief Completed and skipped tasks are settled; an empty tree is fully settled. */
 	double ProgressVisitor::percentSettled() const
 	{
-		throw std::logic_error("ProgressVisitor::percentSettled awaits Connor's aggregation implementation");
+		if (total_ref == 0) return 100.0;
+		return 100.0 * (static_cast<double>(count(ItemStatus::Completed))
+			+ static_cast<double>(count(ItemStatus::Skipped))) / total_ref;
 	}
 }
