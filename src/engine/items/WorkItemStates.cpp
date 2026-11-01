@@ -260,7 +260,7 @@ namespace tividy
 	void UnderReviewState::reject(TaskItem& item, const Participant& reviewer, const std::string& reason) const
 	{
 		unsigned rejectCount = bumpRejections(item);
-		if (rejectCount < item.spec().maxRetries())
+		if (rejectCount <= item.spec().maxRetries())
 		{
 			moveTo(item, InProgressState::instance());
 			emit(item, EventType::ItemRejected, reviewer.id(), Outcome::rejected("REJECTED", reason), "Item rejected by reviewer. Returning to InProgress.");
