@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 24 October 2026
-
-Outcome.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Outcome.cpp
+ * @brief Implements Outcome: the result of a piece of work (accepted, rejected, escalated or failed) and the routing key derived from it.
+ */
 
 #ifndef TIVIDY_CORE_OUTCOME_CPP
 #define TIVIDY_CORE_OUTCOME_CPP

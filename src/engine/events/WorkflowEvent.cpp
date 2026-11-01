@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-WorkflowEvent.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file WorkflowEvent.cpp
+ * @brief Implements WorkflowEvent, the immutable record of one thing that happened, built with a fluent interface.
+ */
 
 #ifndef TIVIDY_EVENTS_WORKFLOWEVENT_CPP
 #define TIVIDY_EVENTS_WORKFLOWEVENT_CPP

@@ -8,10 +8,13 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 25 October 2026
-
-Observer.cpp
+Last Modified: 31 October 2026
 */
+
+/**
+ * @file Observer.cpp
+ * @brief Implements the Observer plumbing: EventPublisher keeps the list of observers and notifies each one of every event.
+ */
 
 #ifndef TIVIDY_EVENTS_OBSERVER_CPP
 #define TIVIDY_EVENTS_OBSERVER_CPP
