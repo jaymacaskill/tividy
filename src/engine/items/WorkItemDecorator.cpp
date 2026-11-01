@@ -184,7 +184,7 @@ namespace tividy
 
 	WorkContext& WorkItemDecorator::context() const
 	{
-		if (context_ref == 0) throw InvalidStateError("work item " + spec().id() + " is not bound to a work context");
+		if (context_ref == nullptr) throw InvalidStateError("work item " + spec().id() + " is not bound to a work context");
 
 		return *context_ref;
 	}
