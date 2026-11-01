@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
+Last Modified: 1 November 2026
 
 test_ui.cpp
 */
@@ -21,6 +21,7 @@ test_ui.cpp
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "engine/core/Participant.h"
 #include "engine/facade/Tividy.h"
@@ -29,6 +30,9 @@ test_ui.cpp
 #include "ui/Console.h"
 #include "ui/LogoArt.h"
 #include "ui/Tui.h"
+#include "engine/definition/WorkflowBuilder.h"
+#include "engine/facade/IndustryPack.h"
+#include "engine/items/TaskItem.h"
 
 /*
 These tests cover Console.cpp, ClientProfile.cpp, ColorDepth.cpp, the generated LogoArt.cpp and Tui.cpp.
@@ -78,6 +82,27 @@ namespace tividy
 				std::ostringstream out;
 				std::streambuf* old_in;
 				std::streambuf* old_out;
+		};
+
+		class PlainDirector : public WorkflowDirector
+		{
+			public:
+				std::string workflowName() const override { return "plain-flow"; }
+				unsigned version() const override { return 1; }
+				std::string description() const override { return "one task"; }
+				void construct(WorkflowBuilder& builder) const override
+				{
+					builder.addTask(std::unique_ptr<WorkItem>(new ManualTask(WorkItemSpec("t", "T").requireRole("clerk"))));
+				}
+		};
+
+		class PlainPack : public IndustryPack
+		{
+			public:
+				std::string key() const override { return "plain"; }
+				std::string displayName() const override { return "Plain"; }
+				std::unique_ptr<WorkflowDirector> createDirector() const override { return std::unique_ptr<WorkflowDirector>(new PlainDirector()); }
+				ClientProfile createProfile() const override { ClientProfile profile; profile.accent = ""; return profile; }
 		};
 	} // anonymous namespace
 
@@ -514,9 +539,17 @@ namespace tividy
 		EXPECT_EQ(2u, run.countOf("Please enter a number from 1 to 8"));
 	}
 
-	TEST(TuiTest, HeadingsCarryNoColourCodesWhenTheProfileHasNoAccent)
+	TEST(TuiTest, HeadingsUseTheDefaultAccentWhenNoPackIsInstalled)
 	{
 		Tividy tividy;
+		TuiRun run(tividy, typed("8"));
+		EXPECT_TRUE(run.printed("\033[38;2;216;137;76m"));
+	}
+
+	TEST(TuiTest, HeadingsCarryNoColourCodesWhenThePackProfileHasNoAccent)
+	{
+		Tividy tividy;
+		tividy.installPack(std::unique_ptr<IndustryPack>(new PlainPack()));
 		TuiRun run(tividy, typed("8"));
 		EXPECT_EQ(std::string::npos, run.console.output().find('\033'));
 	}
@@ -665,13 +698,13 @@ namespace tividy
 		});
 	}
 
-	TEST(ClientProfileTest, DefaultsAreTheNeutralTividyLook)
+	TEST(ClientProfileTest, DefaultsAreTheTividyLook)
 	{
 		ClientProfile profile;
 		EXPECT_EQ("TIVIDY", profile.product_name);
 		EXPECT_EQ("", profile.tagline);
 		EXPECT_EQ("", profile.banner);
-		EXPECT_EQ("", profile.accent);
+		EXPECT_EQ("\033[38;2;216;137;76m", profile.accent);
 		EXPECT_TRUE(profile.vocabulary.empty());
 	}
 
