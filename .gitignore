@@ -1,5 +1,7 @@
 /build/
+/build-docker/
 /tividy
+/tividy-docker
 *.o
 *.d
 *.out
@@ -11,3 +13,9 @@ docs/doxygen/
 .DS_Store
 Thumbs.db
 *.zip
+*.pyc
+vgcore.*
+callgrind.out.*
+core
+.cache/
+compile_commands.json
