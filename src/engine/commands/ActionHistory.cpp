@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
  
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 30 October 2026
- 
-ActionHistory.cpp
+Last Modified: 2 November 2026
 */
+
+/**
+ * @file ActionHistory.cpp
+ * @brief Implements ActionHistory, the Command pattern invoker.
+ * @details Runs a command only while the instance is Running, keeps the
+ * undo stack, refuses to undo irreversible commands, and lists the
+ * executed commands for display.
+ */
  
 #ifndef TIVIDY_COMMANDS_ACTIONHISTORY_CPP
 #define TIVIDY_COMMANDS_ACTIONHISTORY_CPP
