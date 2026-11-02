@@ -28,6 +28,7 @@ COS 214 Final Project · University of Pretoria · 2026</p>
 | **Browse the code documentation** | [Doxygen docs](https://jaymacaskill.github.io/tividy/) |
 | **See how we planned the build** | [Implementation plan](docs/misc/TIVIDY_Implementation_Plan.pdf) |
 | **Work on the repo** | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| **Open the demo slides** | [Demo slides (PDF)](docs/misc/TIVIDY_demo_slides.pdf) |
 
 ---
 
@@ -564,6 +565,7 @@ During the implementation phase, I was responsible for the testing of the Observ
 - **Plan:** the work was split into dependency-ordered phases so nobody waited on anyone: ([PDF](docs/misc/TIVIDY_Implementation_Plan.pdf)).
 - **Process:** every change is a branch and a pull request with four approvals and green CI: [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Evidence:** commit history, closed pull requests and CI runs are in the [GitHub workflow and evidence](report/sections/09-github-workflow.pdf) section of the report.
+- **Demo:** the slides for the live demonstration are here: [Demo slides (PDF)](docs/misc/TIVIDY_demo_slides.pdf).
 
 ---
 
@@ -617,6 +619,7 @@ tividy/
 │   ├── assets/
 │   ├── misc/
 │   └──── TIVIDY_Implementation_Plan.pdf
+│   └──── TIVIDY_demo_slides.pdf
 ├── .devcontainer/            Enables Docker to run in codespaces
 └── .github/                  CI workflows, PR template, labeler
 ```
