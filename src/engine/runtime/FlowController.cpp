@@ -8,10 +8,18 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
-
-FlowController.cpp
+Last Modified: 02 November 2026
 */
+
+/**
+ * @file FlowController.cpp
+ * @brief Implements the event-driven part of FlowController.
+ * @details onEvent() queues events and drain() processes them in first-in,
+ * first-out order. react() decides what each event causes (release
+ * dependants, route, escalate, handle deadlines and retries), and
+ * runAutomatic() runs automatic tasks. Routing and assignment helpers are in
+ * FlowControllerRouting.cpp and FlowControllerHelpers.cpp.
+ */
 
 #ifndef TIVIDY_RUNTIME_FLOWCONTROLLER_CPP
 #define TIVIDY_RUNTIME_FLOWCONTROLLER_CPP

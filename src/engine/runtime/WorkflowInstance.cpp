@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 29 October 2026
-
-WorkflowInstance.cpp
+Last Modified: 02 November 2026
 */
+
+/**
+ * @file WorkflowInstance.cpp
+ * @brief Implements WorkflowInstance, one running copy of a workflow.
+ * @details Holds the item tree, workflow data, event publisher, audit log,
+ * action history and shared context, and implements lookup of items for a
+ * participant plus the start, cancel and finish transitions.
+ */
 
 #ifndef TIVIDY_RUNTIME_WORKFLOWINSTANCE_CPP
 #define TIVIDY_RUNTIME_WORKFLOWINSTANCE_CPP
