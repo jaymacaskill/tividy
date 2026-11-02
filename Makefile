@@ -135,10 +135,16 @@ VALGRIND_FLAGS := --leak-check=full \
 
 # --- Docker ---
 DOCKER_IMAGE := tividy-dev
-DOCKER_RUN   := docker run --rm -v "$(CURDIR)":/app -u "$$(id -u):$$(id -g)" $(DOCKER_IMAGE)
+DOCKER_BASE  := docker run --rm -v "$(CURDIR)":/app -u "$$(id -u):$$(id -g)"
+DOCKER_RUN   := $(DOCKER_BASE) $(DOCKER_IMAGE)
+# interactive runs: -it (and any -e) must come BEFORE the image name, or docker passes them to the command inside
+DOCKER_TTY   := $(DOCKER_BASE) -it
+# the container builds into its own folder and binary so it never mixes with the host's objects (different glibc)
+DOCKER_MAKE  := make BUILD_DIR=build-docker TARGET=tividy-docker
 
-.PHONY: all clean test run doxygen help \
-		docker-build docker-make docker-test docker-run docker-clean
+.PHONY: all clean test run run-demo run-tividy run-hudson run-warped run-nologo run-nocolour doxygen help \
+		docker-build docker-make docker-test docker-run docker-run-demo docker-run-tividy docker-run-hudson \
+		docker-run-warped docker-run-nologo docker-run-nocolour docker-clean
 
 all: $(TARGET)
 
@@ -251,7 +257,28 @@ valgrind-run: $(TARGET)
 	$(VALGRIND) $(VALGRIND_FLAGS) ./$(TARGET)
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET) $(RUN_ARGS)
+
+# named demo launches: same binary, different start screen (the logo) or colour setting
+# the demo pack (document-approval) is the default pack, so it uses the TIVIDY logo
+run-demo: RUN_ARGS := tividy
+run-demo: run
+
+run-tividy: RUN_ARGS := tividy
+run-tividy: run
+
+run-hudson: RUN_ARGS := hudson
+run-hudson: run
+
+run-warped: RUN_ARGS := warped
+run-warped: run
+
+# NO_COLOR=1 turns colour off (the Tui strips the ANSI codes)
+run-nologo: RUN_ARGS := --no-logo
+run-nologo: run
+
+run-nocolour: $(TARGET)
+	NO_COLOR=1 ./$(TARGET)
 
 doxygen:
 	@command -v doxygen >/dev/null 2>&1 || { echo "doxygen not installed"; exit 1; }
@@ -265,13 +292,31 @@ docker-build:
 	docker build -t $(DOCKER_IMAGE) .
 
 docker-make: docker-build
-	$(DOCKER_RUN) make
+	$(DOCKER_RUN) $(DOCKER_MAKE)
 
 docker-test: docker-build
-	$(DOCKER_RUN) make test
+	$(DOCKER_RUN) $(DOCKER_MAKE) test
 
 docker-run: docker-build
-	$(DOCKER_RUN) -it make run
+	$(DOCKER_TTY) $(DOCKER_IMAGE) $(DOCKER_MAKE) run
+
+docker-run-demo: docker-build
+	$(DOCKER_TTY) $(DOCKER_IMAGE) $(DOCKER_MAKE) run-demo
+
+docker-run-nologo: docker-build
+	$(DOCKER_TTY) $(DOCKER_IMAGE) $(DOCKER_MAKE) run-nologo
+
+docker-run-tividy: docker-build
+	$(DOCKER_TTY) $(DOCKER_IMAGE) $(DOCKER_MAKE) run-tividy
+
+docker-run-hudson: docker-build
+	$(DOCKER_TTY) $(DOCKER_IMAGE) $(DOCKER_MAKE) run-hudson
+
+docker-run-warped: docker-build
+	$(DOCKER_TTY) $(DOCKER_IMAGE) $(DOCKER_MAKE) run-warped
+
+docker-run-nocolour: docker-build
+	$(DOCKER_TTY) -e NO_COLOR=1 $(DOCKER_IMAGE) $(DOCKER_MAKE) run
 
 docker-valgrind: docker-build
 	$(DOCKER_RUN) make valgrind
@@ -281,12 +326,18 @@ docker-valgrind-run: docker-build
 
 docker-clean:
 	-docker rmi $(DOCKER_IMAGE)
-	rm -rf $(BUILD_DIR)
+	rm -rf build-docker tividy-docker
 
 help:
 	@echo "Local targets (require system C++11 toolchain + GoogleTest):"
 	@echo "  make              Build $(TARGET)"
-	@echo "  make run          Build and run"
+	@echo "  make run          Build and run (TIVIDY demo pack)"
+	@echo "  make run-demo     Run the demo pack (TIVIDY logo)"
+	@echo "  make run-tividy   Run with the TIVIDY logo"
+	@echo "  make run-hudson   Run with the Hudson (bank) logo"
+	@echo "  make run-warped   Run with the Warped (telecom) logo"
+	@echo "  make run-nologo   Run without the logo"
+	@echo "  make run-nocolour Run with colour turned off"
 	@echo "  make test         Build and run all tests"
 	@echo "  make doxygen      Generate HTML docs"
 	@echo "  make clean        Remove build artifacts"
@@ -298,6 +349,7 @@ help:
 	@echo "  make docker-make  Run 'make' inside the container"
 	@echo "  make docker-test  Run 'make test' inside the container"
 	@echo "  make docker-run   Run the TUI inside the container"
+	@echo "  make docker-run-tividy | docker-run-hudson | docker-run-warped | docker-run-nocolour"
 	@echo "  make docker-clean Remove the dev image and build artifacts"
 	@echo "  make docker-valgrind     Same as 'valgrind', inside Docker"
 	@echo "  make docker-valgrind-run Same as 'valgrind-run', inside Docker"
