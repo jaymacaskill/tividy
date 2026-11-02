@@ -8,10 +8,18 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
  
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 30 October 2026
+Last Modified: 02 November 2026
  
 WorkItemValidation.cpp
 */
+
+/**
+ * @file WorkItemValidation.cpp
+ * @brief Implements ValidationRule, RequiredDataRule and ValidatedWorkItem.
+ * @details ValidatedWorkItem checks its rules before a task is submitted or
+ * completed and refuses the action if a rule fails. RequiredDataRule
+ * fails when named workflow-data keys are missing.
+ */
 
 #ifndef TIVIDY_ITEMS_WORKITEMVALIDATION_CPP
 #define TIVIDY_ITEMS_WORKITEMVALIDATION_CPP

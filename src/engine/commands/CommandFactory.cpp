@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 31 October 2026
-
-CommandFactory.cpp
+Last Modified: 2 November 2026
 */
+
+/**
+ * @file CommandFactory.cpp
+ * @brief Implements CommandFactory, which turns a verb into a Command.
+ * @details The constructor registers the seven standard verbs (start,
+ * submit, complete, approve, reject, escalate, cancel). Industries can
+ * register more with registerVerb(). Unknown verbs are reported, not thrown.
+ */
 
 #ifndef TIVIDY_COMMANDS_COMMANDFACTORY_CPP
 #define TIVIDY_COMMANDS_COMMANDFACTORY_CPP
