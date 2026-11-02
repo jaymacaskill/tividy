@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 01 November 2026
-
-WorkItemDecorator.cpp
+Last Modified: 02 November 2026
 */
+
+/**
+ * @file WorkItemDecorator.cpp
+ * @brief Implements WorkItemDecorator, the base class of the Decorator pattern for work items.
+ * @details Forwards every WorkItem operation (status, children, lifecycle
+ * actions, visitor, iterator, memento, binding) to the wrapped item, so
+ * concrete decorators such as SecureWorkItem override only what they change.
+ */
 
 #ifndef TIVIDY_ITEMS_WORKITEMDECORATOR_CPP
 #define TIVIDY_ITEMS_WORKITEMDECORATOR_CPP
