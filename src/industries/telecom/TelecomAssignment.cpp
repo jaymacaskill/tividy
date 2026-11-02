@@ -8,7 +8,7 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 26 October 2026
+Last Modified: 2 November 2026
 */
 
 /**
@@ -34,7 +34,16 @@ namespace tividy
 			const std::vector<const Participant*> holders = directory.withRole(role);
 			if (holders.empty()) return "";
 
-			if (role != "field-technician") return holders[0]->id();
+		if (role != "field-technician")
+		{
+			// roles such as "system" exist in every pack, so prefer this industry's own participant
+			for (std::size_t i = 0; i < holders.size(); i ++)
+			{
+				if (holders[i]->id().compare(0, 8, "telecom-") == 0)
+					return holders[i]->id();
+			}
+			return holders[0]->id();
+		}
 
 			const std::string region = data.getOr("region", "");
 			if (region.empty()) return "";
