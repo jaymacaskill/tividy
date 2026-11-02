@@ -1,3 +1,26 @@
+/*
+Aidan du Bruyn (25040104)
+Connor Human (22752154)
+Ishmael Ngwasheng (24642542)
+Jay Macaskill (25198387)
+Keval Govind (24904407)
+Ruan van Tonder (25284607)
+Thabo Ngwabi (24742512)
+
+COS 214 (Software Modelling) TIVIDY
+Last Modified: 2 November 2026
+
+FlowControllerHelpers.cpp
+*/
+
+/**
+ * @file FlowControllerHelpers.cpp
+ * @brief Implements FlowController's assignment and instance-evaluation helpers.
+ * @details assignIfPossible() asks the assignment strategy for a participant
+ * when an item becomes Available. evaluateInstance() decides whether the
+ * workflow instance has finished.
+ */
+
 #include "engine/runtime/FlowController.h"
 #include "engine/runtime/WorkflowInstance.h"
 

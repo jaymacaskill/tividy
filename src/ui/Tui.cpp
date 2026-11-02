@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
-
-Tui.cpp
+Last Modified: 02 November 2026
 */
+
+/**
+ * @file Tui.cpp
+ * @brief Implements the interactive text user interface.
+ * @details Draws the menu and the screens (start a workflow, my work, macro
+ * builder, history, progress, undo, advance time), using each client's
+ * vocabulary. It talks only to the Tividy facade and a Console.
+ */
 
 #ifndef TIVIDY_UI_TUI_CPP
 #define TIVIDY_UI_TUI_CPP

@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 27 October 2026
-
-ColorDepth.cpp
+Last Modified: 02 November 2026
 */
+
+/**
+ * @file ColorDepth.cpp
+ * @brief Implements the choice of terminal colour depth.
+ * @details A pure function of environment facts (NO_COLOR, terminal name and
+ * colour settings, whether output is a terminal), so the decision can be
+ * tested without a real terminal.
+ */
 
 #ifndef TIVIDY_UI_COLORDEPTH_CPP
 #define TIVIDY_UI_COLORDEPTH_CPP

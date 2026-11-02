@@ -8,10 +8,18 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
  
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 28 October 2026
+Last Modified: 02 November 2026
  
 DeadlineMonitor.cpp
 */
+
+/**
+ * @file DeadlineMonitor.cpp
+ * @brief Implements DeadlineMonitor, which detects lapsed deadlines.
+ * @details sweep() compares each active item's due time with the clock
+ * and publishes one DeadlineMissed event per lapse. It is polled, for
+ * example by Tividy::advanceTime(), and is not an Observer.
+ */
 
 #ifndef TIVIDY_RUNTIME_DEADLINEMONITOR_CPP
 #define TIVIDY_RUNTIME_DEADLINEMONITOR_CPP

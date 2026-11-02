@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
 
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 30 October 2026
-
-WorkflowLibrary.cpp
+Last Modified: 2 November 2026
 */
+
+/**
+ * @file WorkflowLibrary.cpp
+ * @brief Implements WorkflowLibrary, the store of published workflow definitions.
+ * @details Definitions are stored by name together with the key of the
+ * pack that published them, and are shared as read-only objects so that
+ * many instances can be created from one definition.
+ */
 
 #ifndef TIVIDY_DEFINITION_WORKFLOWLIBRARY_CPP
 #define TIVIDY_DEFINITION_WORKFLOWLIBRARY_CPP
