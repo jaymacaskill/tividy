@@ -22,11 +22,13 @@ COS 214 Final Project · University of Pretoria · 2026</p>
 | **Read the whole report** | [Full report (PDF)](report/COS_214_Project_Report.pdf) |
 | **Read just one deliverable** | [Report by deliverable](#-the-report-one-deliverable-at-a-time) |
 | **See the diagrams** | [Diagrams](#-diagrams) |
+| **Flip through the 15 pattern diagrams** | [Pattern tour](#pattern-tour) |
 | **Run it** | [Quick start](#-quick-start) |
 | **See who did what** | [Team and roles](#-team-and-roles) |
 | **Browse the code documentation** | [Doxygen docs](https://jaymacaskill.github.io/tividy/) |
 | **See how we planned the build** | [Implementation plan](docs/misc/TIVIDY_Implementation_Plan.pdf) |
 | **Work on the repo** | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| **Open the demo slides** | [Demo slides (PDF)](docs/misc/TIVIDY_demo_slides.pdf) |
 
 ---
 
@@ -71,21 +73,42 @@ make docker-run    # the TUI inside the container
 make docker-test   # the test suite inside the container
 ```
 
+### Pick a client or display mode
+
+All of these start the same TUI with the same three workflows installed. They only change the logo and the colours you see first. Every one has a Docker twin: put `docker-` in front (for example `make docker-run-hudson`).
+
+| Command | What you get |
+|---|---|
+| `make run` | The TUI with the default settings |
+| `make run-demo` / `make run-tividy` | The TUI with the TIVIDY logo |
+| `make run-hudson` | The TUI with the Hudson Bank (banking) logo |
+| `make run-warped` | The TUI with the Warped (telecom) logo |
+| `make run-nologo` | The TUI with no logo (`--no-logo`) |
+| `make run-nocolour` | The TUI with colour switched off (`NO_COLOR=1`), handy for screenshots and plain terminals |
+
+### All commands
+
 | Command | What it does |
 |---|---|
 | `make` | Builds `build/libtividy.a` and the `tividy` executable |
-| `make run` | Builds and starts the TUI |
+| `make run` and the `run-*` targets above | Builds and starts the TUI |
 | `make test` | Builds each `tests/*.cpp` as its own binary, runs them all, exits non-zero on any failure |
 | `make valgrind` / `make valgrind-run` | Runs the tests / the TUI under Valgrind with leak checking |
 | `make doxygen` | Generates the HTML documentation |
-| `make docker-build` `docker-make` `docker-test` `docker-run` `docker-valgrind` `docker-valgrind-run` `docker-clean` | The same targets, inside the container |
-| `make help`| A quick reminder of all the make commands |
+| `make docker-build` | Builds the development image (once) |
+| `make docker-make` / `make docker-test` | `make` / `make test` inside the container |
+| `make docker-run` and `docker-run-demo`, `-tividy`, `-hudson`, `-warped`, `-nologo`, `-nocolour` | The TUI inside the container |
+| `make docker-valgrind` / `make docker-valgrind-run` | The Valgrind targets inside the container |
+| `make docker-clean` | Removes the container build artefacts |
+| `make help` | A quick reminder of all the make commands |
 | `make clean` | Removes `build/` |
 
+> [!NOTE]
+> Docker builds go into `build-docker/` and a `tividy-docker` binary, so they never overwrite a native build. Use `make docker-clean` to remove them and `make clean` for the native `build/` folder.
 
 ### Trying both industries in the TUI
 
-1. Run `make run`. The menu lists the installed workflows.
+1. Run `make run-hudson` (or `make run-warped`, or plain `make run`). The menu lists the installed workflows.
 2. Pick **`transaction-dispute`** (Banking) or **`service-activation`** (Telecom). The screen's wording changes per industry because each pack brings its own vocabulary.
 3. Choose who is acting, then act on the items that become available.
 4. Open **history** to see every event, **progress** to see how far along you are, and **undo** to reverse an action.
@@ -236,6 +259,196 @@ Each pack is shown under the logo of the fictional client it was built for.
 | **2. Take a user action** | Command, snapshot, state change and event reactions | [SVG](docs/img/final/sequence-2-user-action.svg) | [Visual Paradigm](docs/vpp/sequence_2_user_action.vpp) |
 | **3. Deadline to escalation** | A lapsed deadline reaching the right approver | [SVG](docs/img/final/sequence-3-deadline-escalation.svg) | [Visual Paradigm](docs/vpp/sequence_3_deadline_escalation.vpp) |
 
+### Pattern tour
+
+<p align="center">
+  <img src="docs/assets/patterns-tour.gif" width="820" alt="Slideshow of the pattern diagrams: Abstract Factory, Builder, Prototype, Composite, Decorator, Adapter, Facade, State, Template Method, Observer, Command, Memento, Iterator, Visitor, Chain of Responsibility"/>
+</p>
+
+The slideshow steps through each pattern diagram (a few seconds each). Open any pattern below for the full-size diagram and a short why, what and how.
+
+<details>
+<summary><b>Abstract Factory</b> · Creational · `IndustryPack`</summary>
+
+<p align="center">
+  <a href="docs/img/final/abstract-factory-diagram.svg"><img src="docs/img/final/abstract-factory-diagram.svg" width="760" alt="Abstract Factory pattern diagram"/></a>
+</p>
+
+**Why:** Each industry needs a matching family of parts that must never be mixed.  
+**How:** A pack creates its own director, participants, connectors, escalation chain and look together.
+
+</details>
+
+<details>
+<summary><b>Builder</b> · Creational · `WorkflowDirector`, `StandardWorkflowBuilder`</summary>
+
+<p align="center">
+  <a href="docs/img/final/builder-diagram.svg"><img src="docs/img/final/builder-diagram.svg" width="760" alt="Builder pattern diagram"/></a>
+</p>
+
+**Why:** A workflow definition is too complex to build in one constructor.  
+**How:** The director knows the recipe and the builder adds stages and tasks step by step.
+
+</details>
+
+<details>
+<summary><b>Prototype</b> · Creational · `WorkflowDefinition::createInstance()`</summary>
+
+<p align="center">
+  <a href="docs/img/final/protorype-diagram.svg"><img src="docs/img/final/protorype-diagram.svg" width="760" alt="Prototype pattern diagram"/></a>
+</p>
+
+**Why:** Every run needs its own private copy of the workflow.  
+**How:** The definition is validated, then its whole tree is cloned, so instances never share data.
+
+</details>
+
+<details>
+<summary><b>Composite</b> · Structural · `WorkItem`, `StageItem`, `TaskItem`</summary>
+
+<p align="center">
+  <a href="docs/img/final/composite-diagram.svg"><img src="docs/img/final/composite-diagram.svg" width="760" alt="Composite pattern diagram"/></a>
+</p>
+
+**Why:** Work is nested, and callers should not care whether they hold one task or a whole stage.  
+**How:** Stages and tasks are both work items, so they are treated the same way.
+
+</details>
+
+<details>
+<summary><b>Decorator</b> · Structural · `SecureWorkItem`, `ValidatedWorkItem`</summary>
+
+<p align="center">
+  <a href="docs/img/final/decorator-diagram.svg"><img src="docs/img/final/decorator-diagram.svg" width="760" alt="Decorator pattern diagram"/></a>
+</p>
+
+**Why:** We want extra rules without editing every task.  
+**How:** A decorator wraps a task and checks the role or the data before the real work runs.
+
+</details>
+
+<details>
+<summary><b>Adapter</b> · Structural · `ExternalConnector`</summary>
+
+<p align="center">
+  <a href="docs/img/final/adapter-diagram.svg"><img src="docs/img/final/adapter-diagram.svg" width="760" alt="Adapter pattern diagram"/></a>
+</p>
+
+**Why:** Outside systems all speak differently.  
+**How:** Each vendor sits behind one connector interface, so tasks call them the same way.
+
+</details>
+
+<details>
+<summary><b>Facade</b> · Structural · `Tividy`</summary>
+
+<p align="center">
+  <a href="docs/img/final/facade-diagram.svg"><img src="docs/img/final/facade-diagram.svg" width="760" alt="Facade pattern diagram"/></a>
+</p>
+
+**Why:** The UI should not need to know the engine's insides.  
+**How:** One front door installs packs, starts workflows, performs actions, undoes and reports progress.
+
+</details>
+
+<details>
+<summary><b>State</b> · Behavioural · `TaskItem` + nine `WorkItemState` classes</summary>
+
+<p align="center">
+  <a href="docs/img/final/state-diagram.svg"><img src="docs/img/final/state-diagram.svg" width="760" alt="State pattern diagram"/></a>
+</p>
+
+**Why:** What a task may do depends on where it is in its life.  
+**How:** Each of the nine states is a class, so an illegal move is refused in one place.
+
+</details>
+
+<details>
+<summary><b>Template Method</b> · Behavioural · `TaskItem::executeWork`</summary>
+
+<p align="center">
+  <a href="docs/img/final/template-method-diagram.svg"><img src="docs/img/final/template-method-diagram.svg" width="760" alt="Template Method pattern diagram"/></a>
+</p>
+
+**Why:** Every task must follow the same safe sequence.  
+**How:** The base class fixes the steps and each task fills in only `performWork`.
+
+</details>
+
+<details>
+<summary><b>Observer</b> · Behavioural · `EventPublisher`, `FlowController`, `AuditObserver`</summary>
+
+<p align="center">
+  <a href="docs/img/final/observer-diagram.svg"><img src="docs/img/final/observer-diagram.svg" width="760" alt="Observer pattern diagram"/></a>
+</p>
+
+**Why:** The audit log and the flow controller should not be wired into tasks.  
+**How:** Items publish events, and any number of listeners react.
+
+</details>
+
+<details>
+<summary><b>Command</b> · Behavioural · `InstanceCommand`, `ActionHistory`</summary>
+
+<p align="center">
+  <a href="docs/img/final/command-diagram.svg"><img src="docs/img/final/command-diagram.svg" width="760" alt="Command pattern diagram"/></a>
+</p>
+
+**Why:** Users' actions must be recorded and undoable.  
+**How:** Every action is an object run through the action history, and macros group several.
+
+</details>
+
+<details>
+<summary><b>Memento</b> · Behavioural · `WorkItemMemento`, `InstanceMemento`</summary>
+
+<p align="center">
+  <a href="docs/img/final/memento-diagram.svg"><img src="docs/img/final/memento-diagram.svg" width="760" alt="Memento pattern diagram"/></a>
+</p>
+
+**Why:** Undo needs the old state back without exposing internals.  
+**How:** A snapshot is captured before a command and restored silently on undo.
+
+</details>
+
+<details>
+<summary><b>Iterator</b> · Behavioural · `DepthFirstIterator`</summary>
+
+<p align="center">
+  <a href="docs/img/final/iterator-diagram.svg"><img src="docs/img/final/iterator-diagram.svg" width="760" alt="Iterator pattern diagram"/></a>
+</p>
+
+**Why:** Callers need to visit every item without knowing the tree layout.  
+**How:** The iterator hands out items one by one, depth first.
+
+</details>
+
+<details>
+<summary><b>Visitor</b> · Behavioural · `ProgressVisitor`</summary>
+
+<p align="center">
+  <a href="docs/img/final/visitor-diagram.svg"><img src="docs/img/final/visitor-diagram.svg" width="760" alt="Visitor pattern diagram"/></a>
+</p>
+
+**Why:** We want new reports without changing item classes.  
+**How:** A visitor walks the tree and counts tasks by status.
+
+</details>
+
+<details>
+<summary><b>Chain of Responsibility</b> · Behavioural · `EscalationHandler`, `RoleEscalationHandler`</summary>
+
+<p align="center">
+  <a href="docs/img/final/chain-of-responsibility-diagram.svg"><img src="docs/img/final/chain-of-responsibility-diagram.svg" width="760" alt="Chain of Responsibility pattern diagram"/></a>
+</p>
+
+**Why:** A stuck task needs the right level of authority, not everyone at once.  
+**How:** Each handler tries it and passes it up if it cannot resolve it.
+
+</details>
+
+*Strategy (routing and assignment) has no standalone diagram yet. It appears in the engine class diagram below.*
+
 ---
 
 ## 👥 Team and roles
@@ -259,49 +472,89 @@ Each member's statement of what they contributed to the whole project.
 <details>
 <summary><b>Aidan du Bruyn</b></summary>
 
-*Contribution statement to be added.*
+**Planning.** I defined the original project scenario, employee onboarding, before an industry was required. I wrote its definition, worked out the roles and participants, and drew its activity diagram. When the brief changed to require a real industry, we replaced onboarding with banking and telecom.
+
+**Implementation.** I implemented the work-item state machine, `WorkItemState` and its helper functions, and fixed the state transitions as the integration tests exposed problems. I also wrote `CommandDecorator` and `RetryingCommand`, `WorkItemValidation` (including `ValidatedWorkItem`), `WorkflowLibrary`, and `CommandFactory`. For the industry packs, I wrote the factory methods for `BankingPack` and `TelecomPack`.
+
+**Testing.** I wrote the tests for everything I implemented. I also wrote the test suites for the Chain of Responsibility and Template Method patterns, for `Command`, and for the `Tividy` facade.
+
+**Diagrams.** I broke the engine class diagram into the 15 individual pattern-specific class diagrams in `docs/img/final/`, and committed them with the updated Visual Paradigm project. I also combined the UML diagrams into the single PDF for the report, and converted diagrams between file formats to help Jay.
 
 </details>
 
 <details>
 <summary><b>Connor Human</b></summary>
 
-*Contribution statement to be added.*
+My contributions to TIVIDY covered several areas including, project co-ordination and management, technical implementation of several design patterns, code reviews and quality assurance, integration and repository oversight and demo preparation.
+
+Jay devised a phased implementation plan which I tracked group progress and co-ordinated their implementation responsibilities against. I then assisted members in understanding dependencies, blockers and outstanding tasks, communicated priorities and kept development work aligned with the deadlines set internally.
+
+I was responsible for ensuring the correct implementation of Strategy, Facade, Command and Visitor and various methods across other shared patterns. Specifically I contributed to `FlowController` which is responsible for routing decisions, dependency resolution, task assignment and workflow completion evaluation. I integrated strategy into workflow execution and implemented industry pack installation and workflow startup in the Facade pattern. `MacroCommand` is responsible for sequential execution, undo nested commands and rollback and in concrete Commands I implemented 7 workflow commands. Lastly I committed `WorkContext` and `ProgressVisitor` which are responsible for shared services and workflow progress calculation respectively.
+
+Reviewing and ensuring quality across PR’s was also a substantial portion of my contribution ensuring that our code was assessed from multiple points of consideration, meaning I also contributed unit tests and debugging.
+
+Finally integration, repository oversight and demonstration preparation formed part of my responsibilities which saw me audit, track dependencies , co-ordinate resolution of blockers and identifying required testing across the repository.
 
 </details>
 
 <details>
 <summary><b>Ishmael Ngwasheng</b></summary>
 
-*Contribution statement to be added.*
+During the deciding and trial phases of the project I was responsible for Pattern mapping & justifications and Tracking of design decisions. This involves having to narrow down the best pattern for a particular problem in the generic structure of the TIVIDY project. I had to decide for and against other patterns which seem to do or even solve the same problem. This involved analyzing an entire TIVIDY scenario and associating each problem in the system to a suitable design pattern.
+
+My contributions during the peak development phases of the TIVIDY project involved implementing core system functionality, applying software design patterns, and developing unit and integration tests. I worked on foundational components such as the Command, Memento, Template Method, and WorkItem structures, as well as runtime functionality including action history, deadline monitoring, and the `StageItem` composite. I also contributed to the Decorator pattern through the implementation of `WorkItemDecorator` and `SecureWorkItem`, alongside tests for the State and Iterator patterns. Additionally, I developed tests for work items, workflow definitions, and the demo industry, and implemented 12 operations in the Tividy facade to support command execution, undo functionality, work-item queries, history and progress reporting, event signalling, time management, and access to shared services.
 
 </details>
 
 <details>
 <summary><b>Jay Macaskill</b></summary>
 
-*Contribution statement to be added.*
+During foundational phases of the project, I was responsible for: core implementation; tooling; documentation and coordination of TIVIDY, including ensuring the presence of header files with Doxygen-style comments. Curated the repository automation through CI, Dockerised build tests, pull request templates and GitHub Actions to ensure the repository is predominantly self-managing, and all pull requests build and pass tests before a merge.
+
+Implemented `engine/core` and `engine/events` packages and their unit tests and also implemented `Observers.cpp`. Provided elements of the implementation of the industry layer, including `BankingTasks.cpp`, `BankingDirector.cpp`, `BankingAdapters.cpp`, `TelecomCreditAdapter.cpp`, `TelecomNetworkAdapter.cpp`, `TelecomAssignment.cpp`, and `TelecomTasks.cpp` together with their necessary tests and a Banking pack smoke test.
+
+Delivered the TUI implementation and an accompanying test suite. Used AI-assisted development and prompt design to produce a Python script that creates custom terminal-based logo art for client logos with fallbacks for terminals without colour support, and an 80-column limit; the art is compiled into the program, so nothing is read from disk at runtime. Handled the overall tooling and infrastructure of the project, including Dockerfile and its compatibility with GitHub Codespaces, CI workflows, the Doxygen documentation hosted on GitHub Pages, branch protection rules, `README.md` and `CONTRIBUTING.md` (which documents the team’s workflow). During the final phases of the project, I consolidated and finalised the project for submission.
+
+Managed the assembly, review, consolidation and formatting of the final report, wrote the design rationale, functional/non-functional/deferred requirements used to guide testing, implementation explanation, industry definitions and workflow documentation for both the Banking industry (“Hudson Bank”) and the Telecom industry (“Warped”). Updated the pattern table to match the delivered system, delivered the final sequence and state diagrams and three of four activity diagrams. Delivered the accompanying slide deck for the live demonstration. Further collaborated with members to revise the final class diagrams to ensure that they reflected the project architecture and overall presentation quality.
+
+Assisted in the coordination of the team throughout, tracking progress, reviewing code and pull requests, and delivering Phase 0 of the project to ensure all project foundations were adequate, thereafter providing a seven-phase implementation plan to assist with work distribution and availability for the team’s questions.
 
 </details>
 
 <details>
 <summary><b>Keval Govind</b></summary>
 
-*Contribution statement to be added.*
+My main responsibility in TIVIDY was Role E, covering Builder, Abstract Factory and Memento, together with supporting workflow-definition and task-execution functionality. I focused on the reusable engine components that allow workflows to be constructed, validated and restored across different industries. I coordinated shared work with teammates so that these components fitted their state-machine, runtime, command and industry implementations.
+
+I implemented the workflow-definition core and structural validation. This included managing workflow metadata, ownership of the template structure and its policies, and detecting problems such as duplicate item IDs, empty stages, invalid dependencies and dependency cycles. I also checked review requirements, automatic-task constraints, deadlines and routing source IDs. Following team clarification, I kept routing-target validation within the runtime rather than extending the shared routing interface. This maintained the agreed separation between validating a reusable definition and checking decisions produced during execution.
+
+For Builder, I implemented the standard workflow-building behaviour and contributed the shared `WorkflowDirector::build()` method. This allows directors to assemble nested stages, add tasks, configure policies and obtain a validated workflow definition. I paid particular attention to ownership, builder reuse and reset behaviour so that successive builds produce independent definitions. My Abstract Factory implementation contribution was the shared `IndustryPack` defaults, including notification, assignment and client-profile products. These defaults support the concrete industry packs developed by teammates while keeping the engine independent of industry-specific details.
+
+My Memento contribution focused on instance-level snapshot capture and restoration. I implemented the collection of item mementos together with workflow data and instance status, allowing command undo to restore a consistent workflow state. Restoration preserves the existing runtime objects, services, observers and audit history. I also implemented the default state operations and shared task-execution behaviour, including validation, failure handling, outcome recording and reversibility bookkeeping.
+
+During integration, I implemented an important correction for irreversible external effects. A task can now record an external commitment immediately, before later response processing might fail. This prevents an operation such as a successful banking transaction followed by a malformed response from being treated as safely reversible. The implementation records the barrier once per execution attempt and preserves it across snapshot restoration.
+
+I supported these implementations with unit and integration tests, including eight formal Builder tests, eleven Memento tests and twenty-six Abstract Factory tests, as well as targeted irreversible-effect regressions. These cover ownership, invalid workflow structures, snapshot independence, rollback, undo boundaries and consistency between industry product families. I also addressed review feedback, reviewed teammates’ pull requests and helped identify dependency and integration issues. Throughout the project, I aimed to verify behaviour using the real collaborating implementations as they became available, rather than relying solely on isolated tests.
 
 </details>
 
 <details>
 <summary><b>Ruan van Tonder</b></summary>
 
-*Contribution statement to be added.*
+I was responsible for the consolidation of our class diagrams in the initial planning phase of the Tividy project. The requirement of industry was then added to the project, which caused me to revise the class diagram before our implementation began.
+
+During the implementation phase, I was responsible for the testing of the Observer, Visitor and Command design patterns as well as the implementation of the `FlowController`, specifically the constructor, destructor and main functionality (along with Connor both by splitting implementation as planned and with Connor picking up some functionality in order to help me manage the work), `WorkflowInstance` (along with Keval by splitting functionality into definitions, snapshots and main functionality as planned) in the general Tividy system. I was also responsible for the `TelecomDirector` in the telecommunication scenario for Tividy (along with Aidan by splitting the Telcom functions as planned). I was also the lead on the runtime integration for the TIVIDY implementation.
 
 </details>
 
 <details>
 <summary><b>Thabo Ngwabi</b></summary>
 
-*Contribution statement to be added.*
+**Planning.** In the planning phase I drew the work-item state diagram and the generic activity diagrams.
+
+**Implementation.** I implemented `TaskItem` and `ManualTask` (the base class for work items), `DepthFirstIterator` for the Iterator pattern, and `WorkflowDefinition::createInstance`, which clones a validated definition into an independent instance. I also implemented `InstanceCommand`, the base class for the engine's undoable instance actions, and `DemoPack`, the generic demo industry pack. While working on `TaskItem` I removed memento logic to avoid overlapping with the Memento work.
+
+**Testing.** I wrote tests for the Adapter pattern covering the banking and telecom connectors, the Decorator pattern, workflow-definition instances and partial definitions, `InstanceCommand`, and the demo industry. I fixed the include and incomplete-type errors that were blocking the iterator and decorator tests.
 
 </details>
 
@@ -312,6 +565,7 @@ Each member's statement of what they contributed to the whole project.
 - **Plan:** the work was split into dependency-ordered phases so nobody waited on anyone: ([PDF](docs/misc/TIVIDY_Implementation_Plan.pdf)).
 - **Process:** every change is a branch and a pull request with four approvals and green CI: [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Evidence:** commit history, closed pull requests and CI runs are in the [GitHub workflow and evidence](report/sections/09-github-workflow.pdf) section of the report.
+- **Demo:** the slides for the live demonstration are here: [Demo slides (PDF)](docs/misc/TIVIDY_demo_slides.pdf).
 
 ---
 
@@ -365,6 +619,7 @@ tividy/
 │   ├── assets/
 │   ├── misc/
 │   └──── TIVIDY_Implementation_Plan.pdf
+│   └──── TIVIDY_demo_slides.pdf
 ├── .devcontainer/            Enables Docker to run in codespaces
 └── .github/                  CI workflows, PR template, labeler
 ```

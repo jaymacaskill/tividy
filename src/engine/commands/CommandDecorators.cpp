@@ -8,10 +8,16 @@ Ruan van Tonder (25284607)
 Thabo Ngwabi (24742512)
  
 COS 214 (Software Modelling) TIVIDY
-Last Modified: 31 October 2026
- 
-CommandDecirators.cpp
+Last Modified: 2 November 2026
 */
+
+/**
+ * @file CommandDecorators.cpp
+ * @brief Implements CommandDecorator and RetryingCommand.
+ * @details CommandDecorator forwards every Command operation to the command
+ * it wraps. RetryingCommand adds retries: it re-runs the wrapped command up
+ * to a fixed number of attempts before reporting failure.
+ */
 
 #ifndef TIVIDY_COMMANDS_COMMANDDECORATORS_CPP
 #define TIVIDY_COMMANDS_COMMANDDECORATORS_CPP
